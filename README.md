@@ -9,6 +9,9 @@
     -> open_digraph.py  
 -> tests  
     -> open_digraph_test.py  
+-> docs  
+    -> session1_ecr.pdf  
+    -> CourseNewECR.pdf
 
 
 ## Description
