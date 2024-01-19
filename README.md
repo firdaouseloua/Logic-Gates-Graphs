@@ -2,16 +2,16 @@
 
 
 ## Contents
--> worksheet.py    
--> modules  
-    -> __pycache__  
-        -> open_digraph.cpython-310.pyc  
-    -> open_digraph.py  
--> tests  
-    -> open_digraph_test.py  
--> docs  
-    -> session1_ecr.pdf  
-    -> CourseNewECR.pdf
+- worksheet.py    
+- modules  
+    - __pycache__  
+        - open_digraph.cpython-310.pyc  
+    - open_digraph.py  
+- tests  
+    - open_digraph_test.py  
+- docs  
+    - session1_ecr.pdf  
+    - CourseNewECR.pdf
 
 
 ## Description
