@@ -10,6 +10,7 @@
 - tests  
     - open_digraph_test.py  
 - docs  
+    - .DS_Store
     - session1_ecr.pdf  
     - CourseNewECR.pdf
 
