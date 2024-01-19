@@ -15,10 +15,10 @@
 
 
 ## Description
-LDD2 Project: Boolean Circuits  
-Firdaous ELOUADI  
-Raphael LEONARDI  
-Baptiste PRAS  
+    LDD2 Project: Boolean Circuits  
+    Firdaous ELOUADI : firdaous.elouadi@universite-paris-saclay.fr
+    Raphael LEONARDI : raphael.leonardi@universite-paris-saclay.fr
+    Baptiste PRAS : baptiste.pras@universite-paris-saclay.fr
 
 
 ## Progress
