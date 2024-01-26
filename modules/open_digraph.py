@@ -111,7 +111,45 @@ class Node:
         """
         Create a copy of the node
         """
-        return Node(self.id, self.label, dict(self.parents), dict(self.children))
+        return Node(self.get_id(), self.get_label(), self.get_parents(), self.get_children())
+
+    def remove_parent_once(self, identity: int) -> None:
+        """
+        Remove an occurrence of the parent
+        identity: int;
+        """
+        if identity in self.get_parents():
+            if self.parents[identity] <= 1:
+                del self.parents[identity]
+            else:
+                self.parents[identity] -= 1
+
+    def remove_child_once(self, identity: int) -> None:
+        """
+       Remove an occurrence of the child
+       identity: int;
+       """
+        if identity in self.children:
+            if self.children[identity] <= 1:
+                del self.children[identity]
+            else:
+                self.children[identity] -= 1
+
+    def remove_parent_id(self, identity: int) -> None:
+        """
+        Removes a given parent
+        identity: int;
+        """
+        if identity in self.parents:
+            del self.parents[identity]
+
+    def remove_child_id(self, identity: int) -> None:
+        """
+        Removes a given child
+        identity: int;
+        """
+        if identity in self.children:
+            del self.children[identity]
 
 
 class OpenDigraph:  # for open directed graph
@@ -251,8 +289,8 @@ class OpenDigraph:  # for open directed graph
     def add_edge(self, src: int, tgt: int) -> None:
         """
         Add an edge from the source node to the target node
-        src: int; source node
-        tgt: int; target node
+        src: int; id of the source node
+        tgt: int; id of the target node
         """
         if src in self.nodes and tgt in self.nodes:
             self.get_node_by_id(src).add_child_id(tgt)  # Add a child to the source node
@@ -266,6 +304,42 @@ class OpenDigraph:  # for open directed graph
         for src, tgt in edges:
             self.add_edge(src, tgt)
 
+    def remove_edge(self, src: int, tgt: int) -> None:
+        """
+        Removes an edge from the graph between the source node and the target node
+        src: int; id of the source node
+        tgt: int; id of the target node
+        """
+        if src in self.nodes and tgt in self.nodes:
+            self.get_node_by_id(src).remove_child_once(tgt)  # Remove a child of the source node
+            self.get_node_by_id(tgt).remove_parent_once(src)  # Remove a parent of the target node
+
+    def remove_edges(self, edges: List[Tuple[int, int]]) -> None:
+        """
+        Remove an edge between each pair of node IDs in the list of edges
+        edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
+        """
+        for src, tgt in edges:
+            self.remove_edge(src, tgt)
+
+    def remove_parallel_edges(self, src: int, tgt: int) -> None:
+        """
+        Removes all edges from the graph between the source node and the target node
+        src: int; id of the source node
+        tgt: int; id of the target node
+        """
+        if src in self.nodes and tgt in self.nodes:
+            self.get_node_by_id(src).remove_child_id(tgt)  # Remove all children of the source node
+            self.get_node_by_id(tgt).remove_parent_id(src)  # Remove all parents of the target node
+
+    def remove_several_parallel_edges(self, edges: List[Tuple[int, int]]) -> None:
+        """
+        Remove all edges between each pair of node IDs in the list of edges
+        edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
+        """
+        for src, tgt in edges:
+            self.remove_parallel_edges(src, tgt)
+
     def add_node(self, label="", parents=None, children=None) -> int:
         """
         Adds a node with a label to the graph, assigning it a new id.
@@ -276,7 +350,7 @@ class OpenDigraph:  # for open directed graph
         parents: List[int]; ids of the parents
         children: List[int]; ids of the childrens
         """
-        # Create an new object Node
+        # Create a new object Node
         new_node = Node(self.new_id(), label, {}, {})
         if parents is not None:
             for parent in parents:
@@ -289,3 +363,30 @@ class OpenDigraph:  # for open directed graph
         self.nodes[new_node.get_id()] = new_node
 
         return new_node.get_id()
+
+    def remove_id(self, identity: int) -> None:
+        """
+        Removes a node from its id
+        identity: int;
+        """
+        if identity in self.nodes:
+            for parent in self.get_node_by_id(identity).get_parents():
+                self.remove_parallel_edges(identity, parent)
+
+            for child in self.get_node_by_id(identity).get_children():
+                self.remove_parallel_edges(identity, child)
+            self.nodes.pop(identity)
+
+    def remove_nodes_by_id(self, ids: List[int]) -> None:
+        """
+        Remove all nodes with IDs in the list of edges
+        edges: list(int); list of nodes to remove
+        """
+        for identity in ids:
+            self.remove_id(identity)
+
+    def is_well_formed(self) -> bool:
+        """
+        Return True if the graph is well-formed, else False
+        """
+        pass
