@@ -70,7 +70,7 @@ class Node:
         Add a new parent to node parents dict
         parent_id: int;
         """
-        if parent_id in self.parents:  # Already a parent
+        if parent_id in self.get_parents():  # Already a parent
             self.parents[parent_id] += 1  # Increase the multiplicity
         else:  # Not yet a parent
             self.parents[parent_id] = 1
@@ -80,7 +80,7 @@ class Node:
         Add a new child to node children dict
         child_id: int;
         """
-        if child_id in self.children:  # Already a child
+        if child_id in self.get_children():  # Already a child
             self.children[child_id] += 1  # Increase the multiplicity
         else:  # Not yet a child
             self.children[child_id] = 1
@@ -90,7 +90,7 @@ class Node:
         """
         Used by the __repr__ method
         """
-        return f'({self.id}, {self.label}, {self.parents}, {self.children})'
+        return f'({self.get_id()}, {self.get_label()}, {self.get_parents()}, {self.get_children()})'
 
     def __repr__(self) -> str:
         """
@@ -104,8 +104,8 @@ class Node:
         Implementation of the "==" between two nodes
         other: Node;
         """
-        return (self.id == other.id and self.label == other.label and
-                self.parents == other.parents and self.children == other.children)
+        return (self.get_id() == other.get_id() and self.get_label() == other.get_label() and
+                self.get_parents() == other.get_parents() and self.get_children() == other.get_children())
 
     def copy(self):
         """
@@ -119,7 +119,7 @@ class Node:
         identity: int;
         """
         if identity in self.get_parents():
-            if self.parents[identity] <= 1:
+            if self.get_parents()[identity] <= 1:
                 del self.parents[identity]
             else:
                 self.parents[identity] -= 1
@@ -129,8 +129,8 @@ class Node:
        Remove an occurrence of the child
        identity: int;
        """
-        if identity in self.children:
-            if self.children[identity] <= 1:
+        if identity in self.get_children():
+            if self.get_children()[identity] <= 1:
                 del self.children[identity]
             else:
                 self.children[identity] -= 1
@@ -140,7 +140,7 @@ class Node:
         Removes a given parent
         identity: int;
         """
-        if identity in self.parents:
+        if identity in self.get_parents():
             del self.parents[identity]
 
     def remove_child_id(self, identity: int) -> None:
@@ -148,7 +148,7 @@ class Node:
         Removes a given child
         identity: int;
         """
-        if identity in self.children:
+        if identity in self.get_children():
             del self.children[identity]
 
 
@@ -236,7 +236,7 @@ class OpenDigraph:  # for open directed graph
         Add a new input to the input list
         input_id: int;
         """
-        if input_id not in self.inputs:  # useless to add it twice
+        if input_id not in self.get_input_ids():  # useless to add it twice
             self.inputs.append(input_id)
 
     def add_output_id(self, output_id: int) -> None:
@@ -244,7 +244,7 @@ class OpenDigraph:  # for open directed graph
         Add a new input to the input list
         input_id: int;
         """
-        if output_id not in self.outputs:  # useless to add it twice
+        if output_id not in self.get_output_ids():  # useless to add it twice
             self.outputs.append(output_id)
 
     # Printing methods
@@ -252,7 +252,7 @@ class OpenDigraph:  # for open directed graph
         """
         Used by the __repr__ method
         """
-        return f'({self.inputs}, {self.outputs}, {self.nodes})'
+        return f'({self.get_input_ids()}, {self.get_output_ids()}, {self.get_nodes()})'
 
     def __repr__(self) -> str:
         """
@@ -266,20 +266,21 @@ class OpenDigraph:  # for open directed graph
         Implementation of the "==" between two diagraphs
         other: OpenDiagraph;
         """
-        return (self.inputs == other.inputs and self.outputs == other.outputs
-                and self.nodes == other.nodes)
+        return (self.get_input_ids() == other.get_input_ids() and self.get_output_ids() == other.get_output_ids()
+                and self.get_nodes() == other.get_nodes())
 
     def copy(self):
         """
         Create a copy of the graph
         """
-        return OpenDigraph(list(self.inputs), list(self.outputs), list(self.nodes.values()))
+        return OpenDigraph(list(self.get_input_ids()), list(self.get_output_ids()),
+                           list(self.get_nodes_by_ids(self.get_node_ids())))
 
     def new_id(self):
         """
         Find and return an unused ID in the graph
         """
-        used_ids = set(self.inputs + self.outputs + list(self.nodes.keys()))
+        used_ids = set(self.get_input_ids() + self.get_output_ids() + list(self.get_node_ids()))
         return max(used_ids) + 1 if used_ids else 0  # If there's no existing id, return 0, else the max + 1
         # We suppose that if we have n ids, they all go from 0 to n-1
         # Still doesn't cause any problem if we don't have that condition
@@ -292,7 +293,7 @@ class OpenDigraph:  # for open directed graph
         src: int; id of the source node
         tgt: int; id of the target node
         """
-        if src in self.nodes and tgt in self.nodes:
+        if src in self.get_node_ids() and tgt in self.get_node_ids():
             self.get_node_by_id(src).add_child_id(tgt)  # Add a child to the source node
             self.get_node_by_id(tgt).add_parent_id(src)  # Add a parent to the target node
 
@@ -310,9 +311,9 @@ class OpenDigraph:  # for open directed graph
         src: int; id of the source node
         tgt: int; id of the target node
         """
-        if src in self.nodes and tgt in self.nodes:
-            self.get_node_by_id(src).remove_child_once(tgt)  # Remove a child of the source node
-            self.get_node_by_id(tgt).remove_parent_once(src)  # Remove a parent of the target node
+        if src in self.get_node_ids() and tgt in self.get_node_ids():
+            self.get_node_by_id(tgt).remove_child_once(src)  # Remove a child of the source node
+            self.get_node_by_id(src).remove_parent_once(tgt)  # Remove a parent of the target node
 
     def remove_edges(self, edges: List[Tuple[int, int]]) -> None:
         """
@@ -328,9 +329,9 @@ class OpenDigraph:  # for open directed graph
         src: int; id of the source node
         tgt: int; id of the target node
         """
-        if src in self.nodes and tgt in self.nodes:
-            self.get_node_by_id(src).remove_child_id(tgt)  # Remove all children of the source node
-            self.get_node_by_id(tgt).remove_parent_id(src)  # Remove all parents of the target node
+        if src in self.get_node_ids() and tgt in self.get_node_ids():
+            self.get_node_by_id(tgt).remove_child_id(src)  # Remove all children of the source node
+            self.get_node_by_id(src).remove_parent_id(tgt)  # Remove all parents of the target node
 
     def remove_several_parallel_edges(self, edges: List[Tuple[int, int]]) -> None:
         """
@@ -369,12 +370,13 @@ class OpenDigraph:  # for open directed graph
         Removes a node from its id
         identity: int;
         """
-        if identity in self.nodes:
+        if identity in self.get_node_ids():
             for parent in self.get_node_by_id(identity).get_parents():
                 self.remove_parallel_edges(identity, parent)
 
             for child in self.get_node_by_id(identity).get_children():
                 self.remove_parallel_edges(identity, child)
+
             self.nodes.pop(identity)
 
     def remove_nodes_by_id(self, ids: List[int]) -> None:

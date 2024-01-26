@@ -32,10 +32,12 @@ class InitTest(unittest.TestCase):
     def test_copy_Node(self):
         n = Node(0, 'i', {}, {1: 1})
         self.assertIsNot(n.copy(), n)
+        self.assertEqual(n.copy(), n)
 
     def test_copy_OpenDigraph(self):
         g = OpenDigraph([0], [0], [Node(0, 'i', {}, {1: 1})])
         self.assertIsNot(g.copy(), g)
+        self.assertEqual(g.copy(), g)
 
     def test_getters_Node(self):
         n = Node(0, 'i', {}, {1: 1})
@@ -128,6 +130,96 @@ class InitTest(unittest.TestCase):
         g = OpenDigraph([3, 4], [6], [n0, n1])
         g.add_node('Paris', [1])
         self.assertEqual(g, OpenDigraph([3, 4], [6], [n0, n1, n2]))
+
+    def test_remove_child_once_Node(self):
+        n = Node(0, 'i', {}, {1: 1, 2: 2})
+        n.remove_child_once(1)
+        n.remove_child_once(2)
+        n.remove_child_once(3)
+        self.assertEqual(n, Node(0, 'i', {}, {2: 1}))
+
+    def test_remove_parent_once_Node(self):
+        n = Node(0, 'i', {1: 1, 2: 2}, {})
+        n.remove_parent_once(1)
+        n.remove_parent_once(2)
+        n.remove_parent_once(3)
+        self.assertEqual(n, Node(0, 'i', {2: 1}, {}))
+
+    def test_remove_child_id_Node(self):
+        n = Node(0, 'i', {}, {1: 2})
+        n.remove_child_id(1)
+        n.remove_child_id(2)
+        self.assertEqual(n, Node(0, 'i', {}, {}))
+
+    def test_remove_parent_id_Node(self):
+        n = Node(0, 'i', {1: 2}, {})
+        n.remove_parent_id(1)
+        n.remove_parent_id(2)
+        self.assertEqual(n, Node(0, 'i', {}, {}))
+
+    def test_remove_edge_OpenDiagraph(self):
+        n0 = Node(0, 'Orsay', {1: 1}, {})
+        n1 = Node(1, 'Le Guichet', {2: 2}, {0: 1})
+        n2 = Node(2, 'Paris', {}, {1: 2})
+        n3 = Node(0, 'Orsay', {}, {})
+        n4 = Node(1, 'Le Guichet', {2: 1}, {})
+        n5 = Node(2, 'Paris', {}, {1: 1})
+        g = OpenDigraph([3, 4], [6], [n0, n1, n2])
+        g.remove_edge(0, 1)
+        g.remove_edge(1, 2)
+        g.remove_edge(2, 1)
+        self.assertEqual(g, OpenDigraph([3, 4], [6], [n3, n4, n5]))
+
+    def test_remove_edges_OpenDiagraph(self):
+        n0 = Node(0, 'Orsay', {1: 1}, {})
+        n1 = Node(1, 'Le Guichet', {2: 2}, {0: 1})
+        n2 = Node(2, 'Paris', {}, {1: 2})
+        n3 = Node(0, 'Orsay', {}, {})
+        n4 = Node(1, 'Le Guichet', {2: 1}, {})
+        n5 = Node(2, 'Paris', {}, {1: 1})
+        g = OpenDigraph([3, 4], [6], [n0, n1, n2])
+        g.remove_edges([(0, 1), (2, 1), (1, 2)])
+        self.assertEqual(g, OpenDigraph([3, 4], [6], [n3, n4, n5]))
+
+    def test_remove_parallel_edges_OpenDiagraph(self):
+        n0 = Node(0, 'Orsay', {1: 1}, {})
+        n1 = Node(1, 'Le Guichet', {2: 2}, {0: 1})
+        n2 = Node(2, 'Paris', {}, {1: 2})
+        n3 = Node(0, 'Orsay', {}, {})
+        n4 = Node(1, 'Le Guichet', {}, {})
+        n5 = Node(2, 'Paris', {}, {})
+        g = OpenDigraph([3, 4], [6], [n0, n1, n2])
+        g.remove_parallel_edges(0, 1)
+        g.remove_parallel_edges(1, 2)
+        self.assertEqual(g, OpenDigraph([3, 4], [6], [n3, n4, n5]))
+
+    def test_remove_several_parallel_edges_OpenDiagraph(self):
+        n0 = Node(0, 'Orsay', {1: 1}, {})
+        n1 = Node(1, 'Le Guichet', {2: 2}, {0: 1})
+        n2 = Node(2, 'Paris', {}, {1: 2})
+        n3 = Node(0, 'Orsay', {}, {})
+        n4 = Node(1, 'Le Guichet', {}, {})
+        n5 = Node(2, 'Paris', {}, {})
+        g = OpenDigraph([3, 4], [6], [n0, n1, n2])
+        g.remove_several_parallel_edges([(0, 1), (1, 2)])
+        self.assertEqual(g, OpenDigraph([3, 4], [6], [n3, n4, n5]))
+
+    def test_remove_id_OpenDiagraph(self):
+        n0 = Node(0, 'Orsay', {}, {})
+        n1 = Node(1, 'Le Guichet', {}, {})
+        n2 = Node(2, 'Paris', {}, {})
+        g = OpenDigraph([3, 4], [6], [n0, n1, n2])
+        g.remove_id(2)
+        g.remove_id(3)
+        self.assertEqual(g, OpenDigraph([3, 4], [6], [n0, n1]))
+
+    def test_remove_nodes_by_id_OpenDiagraph(self):
+        n0 = Node(0, 'Orsay', {}, {})
+        n1 = Node(1, 'Le Guichet', {}, {})
+        n2 = Node(2, 'Paris', {}, {})
+        g = OpenDigraph([3, 4], [6], [n0, n1, n2])
+        g.remove_nodes_by_id([1, 2, 3])
+        self.assertEqual(g, OpenDigraph([3, 4], [6], [n0]))
 
 
 if __name__ == '__main__':  # the following code is called only when
