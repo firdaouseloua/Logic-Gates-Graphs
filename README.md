@@ -11,7 +11,8 @@
     - open_digraph_test.py  
 - docs  
     - .DS_Store
-    - session1_ecr.pdf  
+    - session1_ecr.pdf
+    - session2_ecr.pdf  
     - CourseNewECR.pdf
 
 
