@@ -6,12 +6,11 @@ class Node:
     # Constructor
     def __init__(self, identity: int, label: str, parents: Dict[int, int], children: Dict[int, int]) -> None:
         """
-        Construct a new node object
+        Constructs a new node object
         identity: int; its unique id in the graph
         label: string;
         parents: int->int dict; maps a parent nodes id to its multiplicity
         children: int->int dict; maps a child nodes id to its multiplicity
-        (Not sure what the multiplicity is)
         """
         self.id = identity
         self.label = label
@@ -21,53 +20,53 @@ class Node:
     # Getters
     def get_id(self) -> int:
         """
-        Return node id
+        Returns node id
         """
         return self.id
 
     def get_label(self) -> str:
         """
-        Return node label
+        Returns node label
         """
         return self.label
 
     def get_parents(self) -> Dict[int, int]:
         """
-        Return node parents dict
+        Returns node parents dict
         """
         return self.parents
 
     def get_children(self) -> Dict[int, int]:
         """
-        Return node children dict
+        Returns node children dict
         """
         return self.children
 
     # Setters
     def set_id(self, new_identity: int) -> None:
         """
-        Change node id
+        Changes node id
         new_identity: int; its unique id in the graph
         """
         self.id = new_identity
 
     def set_label(self, new_label: str) -> None:
         """
-        Change node label
+        Changes node label
         new_label: string;
         """
         self.label = new_label
 
     def set_children(self, new_children) -> None:
         """
-        Change node children dict
+        Changes node children dict
         new_children: int->int dict; maps a child nodes id to its multiplicity
         """
         self.children = new_children
 
     def add_parent_id(self, parent_id) -> None:
         """
-        Add a new parent to node parents dict
+        Adds a new parent to node parents dict
         parent_id: int;
         """
         if parent_id in self.get_parents():  # Already a parent
@@ -77,7 +76,7 @@ class Node:
 
     def add_child_id(self, child_id):
         """
-        Add a new child to node children dict
+        Adds a new child to node children dict
         child_id: int;
         """
         if child_id in self.get_children():  # Already a child
@@ -109,13 +108,13 @@ class Node:
 
     def copy(self):
         """
-        Create a copy of the node
+        Creates a copy of the node
         """
         return Node(self.get_id(), self.get_label(), self.get_parents(), self.get_children())
 
     def remove_parent_once(self, identity: int) -> None:
         """
-        Remove an occurrence of the parent
+        Removes an occurrence of the parent
         identity: int;
         """
         if identity in self.get_parents():
@@ -126,9 +125,9 @@ class Node:
 
     def remove_child_once(self, identity: int) -> None:
         """
-       Remove an occurrence of the child
-       identity: int;
-       """
+        Removes an occurrence of the child
+        identity: int;
+        """
         if identity in self.get_children():
             if self.get_children()[identity] <= 1:
                 del self.children[identity]
@@ -157,7 +156,7 @@ class OpenDigraph:  # for open directed graph
     # Constructors
     def __init__(self, inputs: List[int], outputs: List[int], nodes: List[Node]) -> None:
         """
-        Construct a new OpenDigraph object
+        Constructs a new OpenDigraph object
         inputs: int list; the ids of the input nodes
         outputs: int list; the ids of the output nodes
         nodes: node iter;
@@ -169,83 +168,99 @@ class OpenDigraph:  # for open directed graph
     @classmethod
     def empty(cls):
         """
-        Create an instance of the class with empty inputs, outputs, and nodes
+        Creates an instance of the class with empty inputs, outputs, and nodes
         """
         return cls(inputs=[], outputs=[], nodes=[])
 
     # Getters
     def get_input_ids(self) -> List[int]:
         """
-        Return diagraph input list
+        Returns diagraph input list
         """
         return self.inputs
 
     def get_output_ids(self) -> List[int]:
         """
-        Return diagraph output list
+        Returns diagraph output list
         """
         return self.outputs
 
     def get_id_node_map(self) -> Dict[int, Node]:
         """
-        Return diagraph nodes dictionnary
+        Returns diagraph nodes dictionnary
         """
         return self.nodes
 
     def get_nodes(self) -> List[Node]:
         """
-        Return a list of all the nodes
+        Returns a list of all the nodes
         """
         return list(self.nodes.values())
 
     def get_node_ids(self) -> List[int]:
         """
-        Return a list of all the ids
+        Returns a list of all the ids
         """
         return list(self.nodes.keys())
 
     def get_node_by_id(self, node_id: int) -> Node:
         """
-        Return a node given its id
+        Returns a node given its id
         """
         return self.nodes[node_id]
 
     def get_nodes_by_ids(self, ids: List[int]) -> List[Node]:
         """
-        Return a list of nodes given a list of ids
+        Returns a list of nodes given a list of ids
         """
         return [self.nodes[node_id] for node_id in ids if node_id in self.nodes]
 
     # Setters
     def set_inputs(self, new_inputs: List[int]) -> None:
         """
-        Change diagraph input list
+        Changes diagraph input list
         new_inputs: List[int];
         """
+        nodes = self.get_node_ids()
+        for i in new_inputs:
+            if i not in nodes:  # An ID doesn't exist
+                raise ValueError("A given ID doesn't exist")
+                # We will also have to check that the graph is still well-formed later
         self.inputs = new_inputs
 
     def set_outputs(self, new_outputs: List[int]) -> None:
         """
-        Change diagraph output list
+        Changes diagraph output list
         new_outputs: List[int];
         """
+        nodes = self.get_node_ids()
+        for i in new_outputs:
+            if i not in nodes:  # An ID doesn't exist
+                raise ValueError("A given ID doesn't exist")
+                # We will also have to check that the graph is still well-formed later
         self.outputs = new_outputs
 
     def add_input_id(self, input_id: int) -> None:
         """
-        Add a new input to the input list
+        Adds a new input to the input list
         input_id: int;
         """
-        if input_id not in self.get_input_ids():  # useless to add it twice
-            self.inputs.append(input_id)
+        if input_id not in self.get_input_ids():  # Useless to add it twice
+            if input_id in self.get_node_ids():  # Check that the ID exists
+                self.inputs.append(input_id)
+            else:
+                ValueError("ID doesn't exist")  # We will also have to check that the graph is still well-formed later
 
     def add_output_id(self, output_id: int) -> None:
         """
-        Add a new input to the input list
+        Adds a new input to the input list
         input_id: int;
         """
-        if output_id not in self.get_output_ids():  # useless to add it twice
-            self.outputs.append(output_id)
+        if output_id not in self.get_output_ids():  # Useless to add it twice
+            if output_id in self.get_node_ids():  # Check that the ID exists
+                self.outputs.append(output_id)
+            else:
+                ValueError("ID doesn't exist")  # We will also have to check that the graph is still well-formed later
 
     # Printing methods
     def __str__(self) -> str:
@@ -271,14 +286,14 @@ class OpenDigraph:  # for open directed graph
 
     def copy(self):
         """
-        Create a copy of the graph
+        Creates a copy of the graph
         """
         return OpenDigraph(list(self.get_input_ids()), list(self.get_output_ids()),
                            list(self.get_nodes_by_ids(self.get_node_ids())))
 
     def new_id(self):
         """
-        Find and return an unused ID in the graph
+        Finds and return an unused ID in the graph
         """
         used_ids = set(self.get_input_ids() + self.get_output_ids() + list(self.get_node_ids()))
         return max(used_ids) + 1 if used_ids else 0  # If there's no existing id, return 0, else the max + 1
@@ -289,17 +304,20 @@ class OpenDigraph:  # for open directed graph
 
     def add_edge(self, src: int, tgt: int) -> None:
         """
-        Add an edge from the source node to the target node
+        Adds an edge from the source node to the target node
         src: int; id of the source node
         tgt: int; id of the target node
         """
-        if src in self.get_node_ids() and tgt in self.get_node_ids():
+        nodes = self.get_node_ids()
+        if src in nodes and tgt in nodes:
             self.get_node_by_id(src).add_child_id(tgt)  # Add a child to the source node
             self.get_node_by_id(tgt).add_parent_id(src)  # Add a parent to the target node
+        else:
+            raise ValueError("src or tgt doesn't exist")
 
     def add_edges(self, edges: List[Tuple[int, int]]) -> None:
         """
-        Add edges between each pair of node IDs in the list of edges
+        Adds edges between each pair of node IDs in the list of edges
         edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
         """
         for src, tgt in edges:
@@ -311,13 +329,16 @@ class OpenDigraph:  # for open directed graph
         src: int; id of the source node
         tgt: int; id of the target node
         """
-        if src in self.get_node_ids() and tgt in self.get_node_ids():
+        nodes = self.get_node_ids()
+        if src in nodes and tgt in nodes:
             self.get_node_by_id(tgt).remove_child_once(src)  # Remove a child of the source node
             self.get_node_by_id(src).remove_parent_once(tgt)  # Remove a parent of the target node
+        else:
+            raise ValueError("src or tgt doesn't exist")
 
     def remove_edges(self, edges: List[Tuple[int, int]]) -> None:
         """
-        Remove an edge between each pair of node IDs in the list of edges
+        Removes an edge between each pair of node IDs in the list of edges
         edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
         """
         for src, tgt in edges:
@@ -329,13 +350,16 @@ class OpenDigraph:  # for open directed graph
         src: int; id of the source node
         tgt: int; id of the target node
         """
-        if src in self.get_node_ids() and tgt in self.get_node_ids():
-            self.get_node_by_id(tgt).remove_child_id(src)  # Remove all children of the source node
-            self.get_node_by_id(src).remove_parent_id(tgt)  # Remove all parents of the target node
+        nodes = self.get_node_ids()
+        if src in nodes and tgt in nodes:
+            self.get_node_by_id(tgt).remove_parent_id(src)  # Remove all parents of the source node
+            self.get_node_by_id(src).remove_child_id(tgt)  # Remove all children of the target node
+        else:
+            raise ValueError("src or tgt doesn't exist")
 
     def remove_several_parallel_edges(self, edges: List[Tuple[int, int]]) -> None:
         """
-        Remove all edges between each pair of node IDs in the list of edges
+        Removes all edges between each pair of node IDs in the list of edges
         edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
         """
         for src, tgt in edges:
@@ -351,37 +375,89 @@ class OpenDigraph:  # for open directed graph
         parents: List[int]; ids of the parents
         children: List[int]; ids of the childrens
         """
+        nodes = self.get_node_ids()
         # Create a new object Node
         new_node = Node(self.new_id(), label, {}, {})
         if parents is not None:
             for parent in parents:
-                new_node.add_parent_id(parent)
+                if parent in nodes:  # Check that the parent exists
+                    new_node.add_parent_id(parent)
+                else:
+                    raise ValueError("One parent doesn't exist")
         if children is not None:
             for child in children:
-                new_node.add_child_id(child)
+                if child in nodes:  # Check that the child exists
+                    new_node.add_child_id(child)
+                else:
+                    raise ValueError("One child doesn't exist")
 
         # Add the new node to the graph
         self.nodes[new_node.get_id()] = new_node
 
         return new_node.get_id()
 
+    def add_input_node(self, node_id: int, child_id: int) -> None:
+        """
+        Adds a new input node to the graph and links it to the specified child node.
+        node_id: int; id of the new input node
+        child_id: int; id of the child node
+        """
+        # Asserts to keep the graph well-formed
+        if node_id in self.get_node_ids():
+            raise ValueError("Node already exists")
+        if child_id not in self.get_node_ids():
+            raise ValueError("Child doesn't exist")
+
+        # Create a new input node with no parents and one child
+        node = Node(node_id, "", {}, {})
+        self.nodes[node_id] = node
+        self.add_input_id(node_id)
+        self.add_edge(node_id, child_id)
+
+    def add_output_node(self, node_id: int, parent_id: int) -> None:
+        """
+        Adds a new output node to the graph and links it to the specified parent node.
+        node_id: int; id of the new output node
+        parent_id: int; id of the parent node
+        """
+        # Asserts to keep the graph well-formed
+        if node_id in self.get_node_ids():
+            raise ValueError("Node already exists")
+        if parent_id not in self.get_node_ids():
+            raise ValueError("Parent doesn't exist")
+
+        # Create a new output node with one parent and no children
+        node = Node(node_id, "", {}, {})
+        self.nodes[node_id] = node
+        self.add_output_id(node_id)
+        self.add_edge(parent_id, node_id)
+
     def remove_id(self, identity: int) -> None:
         """
         Removes a node from its id
-        identity: int;
+        identity: int; id of the node to remove
         """
         if identity in self.get_node_ids():
-            for parent in self.get_node_by_id(identity).get_parents():
-                self.remove_parallel_edges(identity, parent)
 
-            for child in self.get_node_by_id(identity).get_children():
+            parents = list(self.get_node_by_id(identity).get_parents().keys())
+            children = list(self.get_node_by_id(identity).get_children().keys())
+            for parent in parents:  # Remove all links with parents
+                self.remove_parallel_edges(parent, identity)
+            for child in children:  # Remove all links with children
                 self.remove_parallel_edges(identity, child)
-
             self.nodes.pop(identity)
+
+            inputs = self.get_input_ids()
+            outputs = self.get_output_ids()
+            if identity in inputs:  # Check if the node was an input
+                self.set_inputs([node for node in inputs if node != identity])
+            elif identity in outputs:  # Check if the node was an output
+                self.set_inputs([node for node in outputs if node != identity])
+
 
     def remove_nodes_by_id(self, ids: List[int]) -> None:
         """
-        Remove all nodes with IDs in the list of edges
+        Removes all nodes with IDs in the list of edges
         edges: list(int); list of nodes to remove
         """
         for identity in ids:
@@ -389,6 +465,66 @@ class OpenDigraph:  # for open directed graph
 
     def is_well_formed(self) -> bool:
         """
-        Return True if the graph is well-formed, else False
+        Returns True if the graph is well-formed, else False
         """
-        pass
+        # Getters
+        node_ids = self.get_node_ids()
+        input_ids = self.get_input_ids()
+        output_ids = self.get_output_ids()
+
+        # Property 1: Check if each input and output node is in the graph
+        for input_id in input_ids:  # inputs
+            if input_id not in node_ids:
+                return False
+        for output_id in output_ids:  # outputs
+            if output_id not in node_ids:
+                return False
+
+        # Property 2: Check if each input node has a single child and no parent
+        for input_id in input_ids:
+            input_node = self.get_node_by_id(input_id)
+            children = input_node.get_children()
+            parents = input_node.get_parents()
+            if len(children) != 1 or len(parents) > 0:  # Wrong number of children or have parent(s)
+                return False
+            for child_multiplicity in children.values():  # At this step, it's exactly one value
+                if child_multiplicity != 1:  # Wrong multiplicity
+                    return False
+
+        # Property 3: Check if each output node has a single parent and no children
+        for output_id in output_ids:
+            output_node = self.get_node_by_id(output_id)
+            children = output_node.get_children()
+            parents = output_node.get_parents()
+            if len(children) > 0 or len(parents) != 1:  # Wrong number of parents or have child(ren)
+                return False
+            for parent_multiplicity in parents.values():  # At this step, it's exactly one value
+                if parent_multiplicity != 1:    # Wrong multiplicity
+                    return False
+
+        # Property 4: Check if each key in nodes corresponds to a node which has the key as id
+        for node_id, node in self.get_id_node_map().items():
+            if node.get_id() != node_id:
+                return False
+
+        # Property 5: Check the relationship between parents and children
+        for node_id, node in self.get_id_node_map().items():
+            for child_id, multiplicity in node.get_children().items():  # child->parent
+                child = self.get_node_by_id(child_id)
+                parents = child.get_parents()
+                if node_id not in parents or parents[node_id] != multiplicity:
+                    return False
+            for parent_id, multiplicity in node.get_parents().items():  # parent->child
+                parent = self.get_node_by_id(parent_id)
+                children = parent.get_children()
+                if node_id not in children or children[node_id] != multiplicity:
+                    return False
+
+        return True
+
+    def assert_is_well_formed(self) -> None:
+        """
+        Asserts if the graph is well-formed, raises an error if it's not
+        """
+        if not self.is_well_formed():
+            raise ValueError("Graph not well-formed")
