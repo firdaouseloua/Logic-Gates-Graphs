@@ -105,7 +105,7 @@ class InitTest(unittest.TestCase):
         self.assertEqual(n0, n0)
         self.assertNotEqual(n0, n1)
 
-    def test_eq_OpenDiagraph(self):
+    def test_eq_OpenDigraph(self):
         n0 = Node(0, 'Orsay', {3: 1, 4: 1}, {2: 1})
         n1 = Node(1, 'Le Guichet', {}, {6: 1, 2: 1})
         g1 = OpenDigraph.empty()
@@ -171,7 +171,7 @@ class InitTest(unittest.TestCase):
         n.remove_parent_id(2)
         self.assertEqual(n, Node(0, 'i', {}, {}))
 
-    def test_remove_edge_OpenDiagraph(self):
+    def test_remove_edge_OpenDigraph(self):
         n0 = Node(0, 'Orsay', {1: 1}, {})
         n1 = Node(1, 'Le Guichet', {2: 2}, {0: 1})
         n2 = Node(2, 'Paris', {}, {1: 2})
@@ -184,7 +184,7 @@ class InitTest(unittest.TestCase):
         g.remove_edge(2, 1)
         self.assertEqual(g, OpenDigraph([], [], [n3, n4, n5]))
 
-    def test_remove_edges_OpenDiagraph(self):
+    def test_remove_edges_OpenDigraph(self):
         n0 = Node(0, 'Orsay', {1: 1}, {})
         n1 = Node(1, 'Le Guichet', {2: 2}, {0: 1})
         n2 = Node(2, 'Paris', {}, {1: 2})
@@ -195,7 +195,7 @@ class InitTest(unittest.TestCase):
         g.remove_edges([(0, 1), (2, 1), (1, 2)])
         self.assertEqual(g, OpenDigraph([], [], [n3, n4, n5]))
 
-    def test_remove_parallel_edges_OpenDiagraph(self):
+    def test_remove_parallel_edges_OpenDigraph(self):
         n0 = Node(0, 'Orsay', {}, {1: 1})
         n1 = Node(1, 'Le Guichet', {0: 1}, {2: 2})
         n2 = Node(2, 'Paris', {1: 2}, {})
@@ -207,7 +207,7 @@ class InitTest(unittest.TestCase):
         g.remove_parallel_edges(1, 2)
         self.assertEqual(g, OpenDigraph([], [], [n3, n4, n5]))
 
-    def test_remove_several_parallel_edges_OpenDiagraph(self):
+    def test_remove_several_parallel_edges_OpenDigraph(self):
         n0 = Node(0, 'Orsay', {3: 1, 4: 1}, {1: 2})
         n1 = Node(1, 'Le Guichet', {0: 2}, {6: 1})
         n3 = Node(3, 'Palaiseau', {}, {0: 1})
@@ -222,7 +222,7 @@ class InitTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             g.remove_several_parallel_edges([(1, 2), (0, 2)])
 
-    def test_remove_id_OpenDiagraph(self):
+    def test_remove_id_OpenDigraph(self):
         n0 = Node(0, 'Orsay', {3: 1, 4: 1}, {})
         n1 = Node(1, 'Le Guichet', {}, {6: 1})
         n3 = Node(3, 'Palaiseau', {}, {0: 1})
@@ -233,7 +233,7 @@ class InitTest(unittest.TestCase):
         g.remove_id(3)
         self.assertEqual(g, OpenDigraph([4], [6], [n0, n1, n4, n6]))
 
-    def test_remove_nodes_by_id_OpenDiagraph(self):
+    def test_remove_nodes_by_id_OpenDigraph(self):
         n0 = Node(0, 'Orsay', {3: 1, 4: 1}, {})
         n1 = Node(1, 'Le Guichet', {}, {6: 1})
         n3 = Node(3, 'Palaiseau', {}, {0: 1})
@@ -243,7 +243,7 @@ class InitTest(unittest.TestCase):
         g.remove_nodes_by_id([1, 2, 3])
         self.assertEqual(g, OpenDigraph([4], [6], [n0, n4, n6]))
 
-    def test_add_input_node_OpenDiagraph(self):
+    def test_add_input_node_OpenDigraph(self):
         n0 = Node(0, 'Orsay', {3: 1, 4: 1}, {})
         n1 = Node(1, 'Le Guichet', {}, {6: 1})
         n3 = Node(3, 'Palaiseau', {}, {0: 1})
@@ -262,7 +262,7 @@ class InitTest(unittest.TestCase):
             g.add_input_node(2, 7)  # 7 is not a valid child ID
             g.add_input_node(1, 2)  # 1 is not a valid ID
 
-    def test_add_output_node_OpenDiagraph(self):
+    def test_add_output_node_OpenDigraph(self):
         n0 = Node(0, 'Orsay', {3: 1, 4: 1}, {})
         n1 = Node(1, 'Le Guichet', {}, {6: 1})
         n3 = Node(3, 'Palaiseau', {}, {0: 1})
@@ -356,6 +356,41 @@ class InitTest(unittest.TestCase):
         # Test a poorly-formed graph: An invalid output node ID
         g8 = OpenDigraph([3], [], [])
         self.assertFalse(g8.is_well_formed())
+
+    def test_random_int_matrix(self):
+        with self.assertRaises(ValueError):
+            random_int_matrix(5, 4)
+            random_int_matrix(5, 6, symmetric=True, oriented=True)
+
+        m = random_int_matrix(5, 10)
+        for i in range(5):
+            self.assertEqual(m[i][i], 0)
+
+        m = random_int_matrix(5, 10, symmetric=True)
+        for i in range(5):
+            for j in range(i+1, 5):
+                self.assertEqual(m[i][j], m[j][i])
+
+        m = random_int_matrix(5, 10, oriented=True)
+        for i in range(5):
+            for j in range(i+1, 5):
+                if m[i][j] > 0:
+                    self.assertEqual(0, m[j][i])
+
+    def test_graph_from_adjacency_matrix_OpenDigraph(self):
+        m = [[0, 1, 1, 0, 0],
+             [0, 0, 0, 1, 2],
+             [0, 0, 0, 2, 0],
+             [1, 0, 0, 0, 1],
+             [0, 0, 0, 0, 0]]
+        n1 = Node(0, '0', {3: 1}, {1: 1, 2: 1})
+        n2 = Node(1, '1', {0: 1}, {3: 1, 4: 2})
+        n3 = Node(2, '2', {0: 1}, {3: 2})
+        n4 = Node(3, '3', {1: 1, 2: 2}, {0: 1, 4: 1})
+        n5 = Node(4, '4', {1: 2, 3: 1}, {})
+        self.assertEqual(OpenDigraph([], [], [n1, n2, n3, n4, n5]), graph_from_adjacency_matrix(m))
+        with self.assertRaises(ValueError):
+            graph_from_adjacency_matrix([[1, 1, 1], [1, 1, 1]])
 
 
 if __name__ == '__main__':  # the following code is called only when

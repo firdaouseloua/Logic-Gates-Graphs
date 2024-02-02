@@ -1,4 +1,5 @@
 from typing import List, Dict, Tuple
+from random import randint
 
 
 class Node:
@@ -7,10 +8,10 @@ class Node:
     def __init__(self, identity: int, label: str, parents: Dict[int, int], children: Dict[int, int]) -> None:
         """
         Constructs a new node object
-        identity: int; its unique id in the graph
-        label: string;
-        parents: int->int dict; maps a parent nodes id to its multiplicity
-        children: int->int dict; maps a child nodes id to its multiplicity
+        :param identity: int; its unique id in the graph
+        :param label: string;
+        :param parents: int->int dict; maps a parent nodes id to its multiplicity
+        :param children: int->int dict; maps a child nodes id to its multiplicity
         """
         self.id = identity
         self.label = label
@@ -46,28 +47,28 @@ class Node:
     def set_id(self, new_identity: int) -> None:
         """
         Changes node id
-        new_identity: int; its unique id in the graph
+        :param new_identity: int; its unique id in the graph
         """
         self.id = new_identity
 
     def set_label(self, new_label: str) -> None:
         """
         Changes node label
-        new_label: string;
+        :param new_label: string;
         """
         self.label = new_label
 
     def set_children(self, new_children) -> None:
         """
         Changes node children dict
-        new_children: int->int dict; maps a child nodes id to its multiplicity
+        :param new_children: int->int dict; maps a child nodes id to its multiplicity
         """
         self.children = new_children
 
     def add_parent_id(self, parent_id) -> None:
         """
         Adds a new parent to node parents dict
-        parent_id: int;
+        :param parent_id: int;
         """
         if parent_id in self.get_parents():  # Already a parent
             self.parents[parent_id] += 1  # Increase the multiplicity
@@ -77,7 +78,7 @@ class Node:
     def add_child_id(self, child_id):
         """
         Adds a new child to node children dict
-        child_id: int;
+        :param child_id: int;
         """
         if child_id in self.get_children():  # Already a child
             self.children[child_id] += 1  # Increase the multiplicity
@@ -101,7 +102,7 @@ class Node:
     def __eq__(self, other) -> bool:
         """
         Implementation of the "==" between two nodes
-        other: Node;
+        :param other: Node;
         """
         return (self.get_id() == other.get_id() and self.get_label() == other.get_label() and
                 self.get_parents() == other.get_parents() and self.get_children() == other.get_children())
@@ -115,7 +116,7 @@ class Node:
     def remove_parent_once(self, identity: int) -> None:
         """
         Removes an occurrence of the parent
-        identity: int;
+        :param identity: int;
         """
         if identity in self.get_parents():
             if self.get_parents()[identity] <= 1:
@@ -126,7 +127,7 @@ class Node:
     def remove_child_once(self, identity: int) -> None:
         """
         Removes an occurrence of the child
-        identity: int;
+        :param identity: int;
         """
         if identity in self.get_children():
             if self.get_children()[identity] <= 1:
@@ -137,7 +138,7 @@ class Node:
     def remove_parent_id(self, identity: int) -> None:
         """
         Removes a given parent
-        identity: int;
+        :param identity: int;
         """
         if identity in self.get_parents():
             del self.parents[identity]
@@ -145,7 +146,7 @@ class Node:
     def remove_child_id(self, identity: int) -> None:
         """
         Removes a given child
-        identity: int;
+        :param identity: int;
         """
         if identity in self.get_children():
             del self.children[identity]
@@ -157,9 +158,9 @@ class OpenDigraph:  # for open directed graph
     def __init__(self, inputs: List[int], outputs: List[int], nodes: List[Node]) -> None:
         """
         Constructs a new OpenDigraph object
-        inputs: int list; the ids of the input nodes
-        outputs: int list; the ids of the output nodes
-        nodes: node iter;
+        :param inputs: int list; the ids of the input nodes
+        :param outputs: int list; the ids of the output nodes
+        :param nodes: node iter;
         """
         self.inputs = inputs
         self.outputs = outputs
@@ -175,19 +176,19 @@ class OpenDigraph:  # for open directed graph
     # Getters
     def get_input_ids(self) -> List[int]:
         """
-        Returns diagraph input list
+        Returns digraph input list
         """
         return self.inputs
 
     def get_output_ids(self) -> List[int]:
         """
-        Returns diagraph output list
+        Returns digraph output list
         """
         return self.outputs
 
     def get_id_node_map(self) -> Dict[int, Node]:
         """
-        Returns diagraph nodes dictionnary
+        Returns digraph nodes dictionnary
         """
         return self.nodes
 
@@ -218,8 +219,8 @@ class OpenDigraph:  # for open directed graph
     # Setters
     def set_inputs(self, new_inputs: List[int]) -> None:
         """
-        Changes diagraph input list
-        new_inputs: List[int];
+        Changes digraph input list
+        :param new_inputs: List[int];
         """
         nodes = self.get_node_ids()
         for i in new_inputs:
@@ -230,8 +231,8 @@ class OpenDigraph:  # for open directed graph
 
     def set_outputs(self, new_outputs: List[int]) -> None:
         """
-        Changes diagraph output list
-        new_outputs: List[int];
+        Changes digraph output list
+        :param new_outputs: List[int];
         """
         nodes = self.get_node_ids()
         for i in new_outputs:
@@ -243,7 +244,7 @@ class OpenDigraph:  # for open directed graph
     def add_input_id(self, input_id: int) -> None:
         """
         Adds a new input to the input list
-        input_id: int;
+        :param input_id: int;
         """
         if input_id not in self.get_input_ids():  # Useless to add it twice
             if input_id in self.get_node_ids():  # Check that the ID exists
@@ -254,7 +255,7 @@ class OpenDigraph:  # for open directed graph
     def add_output_id(self, output_id: int) -> None:
         """
         Adds a new input to the input list
-        input_id: int;
+        :param output_id: int;
         """
         if output_id not in self.get_output_ids():  # Useless to add it twice
             if output_id in self.get_node_ids():  # Check that the ID exists
@@ -278,8 +279,8 @@ class OpenDigraph:  # for open directed graph
     # Methods
     def __eq__(self, other) -> bool:
         """
-        Implementation of the "==" between two diagraphs
-        other: OpenDiagraph;
+        Implementation of the "==" between two digraphs
+        :param other: OpenDigraph;
         """
         return (self.get_input_ids() == other.get_input_ids() and self.get_output_ids() == other.get_output_ids()
                 and self.get_nodes() == other.get_nodes())
@@ -305,8 +306,8 @@ class OpenDigraph:  # for open directed graph
     def add_edge(self, src: int, tgt: int) -> None:
         """
         Adds an edge from the source node to the target node
-        src: int; id of the source node
-        tgt: int; id of the target node
+        :param src: int; id of the source node
+        :param tgt: int; id of the target node
         """
         nodes = self.get_node_ids()
         if src in nodes and tgt in nodes:
@@ -318,7 +319,7 @@ class OpenDigraph:  # for open directed graph
     def add_edges(self, edges: List[Tuple[int, int]]) -> None:
         """
         Adds edges between each pair of node IDs in the list of edges
-        edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
+        :param edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
         """
         for src, tgt in edges:
             self.add_edge(src, tgt)
@@ -326,8 +327,8 @@ class OpenDigraph:  # for open directed graph
     def remove_edge(self, src: int, tgt: int) -> None:
         """
         Removes an edge from the graph between the source node and the target node
-        src: int; id of the source node
-        tgt: int; id of the target node
+        :param src: int; id of the source node
+        :param tgt: int; id of the target node
         """
         nodes = self.get_node_ids()
         if src in nodes and tgt in nodes:
@@ -339,7 +340,7 @@ class OpenDigraph:  # for open directed graph
     def remove_edges(self, edges: List[Tuple[int, int]]) -> None:
         """
         Removes an edge between each pair of node IDs in the list of edges
-        edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
+        :param edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
         """
         for src, tgt in edges:
             self.remove_edge(src, tgt)
@@ -347,8 +348,8 @@ class OpenDigraph:  # for open directed graph
     def remove_parallel_edges(self, src: int, tgt: int) -> None:
         """
         Removes all edges from the graph between the source node and the target node
-        src: int; id of the source node
-        tgt: int; id of the target node
+        :param src: int; id of the source node
+        :param tgt: int; id of the target node
         """
         nodes = self.get_node_ids()
         if src in nodes and tgt in nodes:
@@ -360,7 +361,7 @@ class OpenDigraph:  # for open directed graph
     def remove_several_parallel_edges(self, edges: List[Tuple[int, int]]) -> None:
         """
         Removes all edges between each pair of node IDs in the list of edges
-        edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
+        :param edges: list(tuple(int, int)); list of edges to add (int; source node, int; target node)
         """
         for src, tgt in edges:
             self.remove_parallel_edges(src, tgt)
@@ -371,9 +372,9 @@ class OpenDigraph:  # for open directed graph
         Links it with the parent and child id nodes with their respective multiplicities.
         If the default values for parents and/or children are None, assign them an empty dictionary.
         Returns the id of the new node.
-        label: string;
-        parents: List[int]; ids of the parents
-        children: List[int]; ids of the childrens
+        :param label: string;
+        :param parents: List[int]; ids of the parents
+        :param children: List[int]; ids of the childrens
         """
         nodes = self.get_node_ids()
         # Create a new object Node
@@ -399,8 +400,8 @@ class OpenDigraph:  # for open directed graph
     def add_input_node(self, node_id: int, child_id: int) -> None:
         """
         Adds a new input node to the graph and links it to the specified child node.
-        node_id: int; id of the new input node
-        child_id: int; id of the child node
+        :param node_id: int; id of the new input node
+        :param child_id: int; id of the child node
         """
         # Asserts to keep the graph well-formed
         if node_id in self.get_node_ids():
@@ -417,8 +418,8 @@ class OpenDigraph:  # for open directed graph
     def add_output_node(self, node_id: int, parent_id: int) -> None:
         """
         Adds a new output node to the graph and links it to the specified parent node.
-        node_id: int; id of the new output node
-        parent_id: int; id of the parent node
+        :param node_id: int; id of the new output node
+        :param parent_id: int; id of the parent node
         """
         # Asserts to keep the graph well-formed
         if node_id in self.get_node_ids():
@@ -435,7 +436,7 @@ class OpenDigraph:  # for open directed graph
     def remove_id(self, identity: int) -> None:
         """
         Removes a node from its id
-        identity: int; id of the node to remove
+        :param identity: int; id of the node to remove
         """
         if identity in self.get_node_ids():
 
@@ -454,11 +455,10 @@ class OpenDigraph:  # for open directed graph
             elif identity in outputs:  # Check if the node was an output
                 self.set_inputs([node for node in outputs if node != identity])
 
-
     def remove_nodes_by_id(self, ids: List[int]) -> None:
         """
         Removes all nodes with IDs in the list of edges
-        edges: list(int); list of nodes to remove
+        :param ids: list(int); list of nodes to remove
         """
         for identity in ids:
             self.remove_id(identity)
@@ -528,3 +528,84 @@ class OpenDigraph:  # for open directed graph
         """
         if not self.is_well_formed():
             raise ValueError("Graph not well-formed")
+
+
+def random_int_list(n: int, bound: int, unique=False) -> List[int]:
+    """
+    Returns a list of n random integrers between 0 and n
+    :param n: int; numbers of integrers wanted
+    :param bound: int; maximum value of the integrers
+    :param unique: bool; set True if you want only unique integrers
+    """
+    if unique and n > bound + 1:
+        raise ValueError("Bound too small compared to n")
+    res = []
+    for _ in range(n):
+        tmp = randint(0, bound)
+        if unique:
+            while tmp in res:  # All numbers must be different to be IDs
+                tmp = randint(0, bound)
+        res.append(tmp)
+    return res
+
+
+def random_int_matrix(n: int, bound: int, unique=False, null_diag=True, symmetric=False,
+                      oriented=False) -> List[List[int]]:
+    """
+    Returns a matrix of nxn random integrers between 0 and n
+    :param n: int; numbers of rows and columns wanted
+    :param bound: int; maximum value of the integrers
+    :param unique: bool; set True if you want only unique integrers
+    :param null_diag: bool; set True if you want the diagonal to be zeros
+    :param symmetric: bool; set True if you want the matrix to be symmetric
+    :param oriented: bool; set True if you want the matrix to define an oriented graph
+    """
+    if symmetric and oriented:
+        raise ValueError("Matrix cannot be symmetric and oriented")
+
+    res = []
+    for _ in range(n):
+        res.append(random_int_list(n, bound, unique))
+
+    if null_diag:
+        for i in range(n):
+            res[i][i] = 0
+
+    if symmetric:
+        for i in range(n):
+            for j in range(i+1, n):
+                res[j][i] = res[i][j]
+
+    if oriented:
+        for i in range(n):
+            for j in range(i+1, n):
+                if res[i][j] > 0:
+                    res[j][i] = 0
+
+    return res
+
+
+def graph_from_adjacency_matrix(matrix: List[List[int]]) -> OpenDigraph:
+    """
+    Returns an OpenDigraph from an adjency matrix
+    :param matrix: List[List[int]]; the ajdency matrix
+    """
+    n = len(matrix)
+    nodes = []
+    for identity in range(n):
+        children = {}
+        parents = {}
+        for i in range(n):
+            if len(matrix[i]) != n or len(matrix[identity]) != n:
+                raise ValueError("The matrix is not a squared matrix")
+
+            if matrix[identity][i]:
+                children[i] = matrix[identity][i]
+
+            if matrix[i][identity]:
+                parents[i] = matrix[i][identity]
+
+        node = Node(identity, str(identity), parents, children)
+        nodes.append(node)
+
+    return OpenDigraph([], [], nodes)
