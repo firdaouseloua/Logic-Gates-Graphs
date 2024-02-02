@@ -396,7 +396,35 @@ class InitTest(unittest.TestCase):
         self.assertEqual(OpenDigraph([], [], [n1, n2, n3, n4, n5]), graph_from_adjacency_matrix(m))
         with self.assertRaises(ValueError):
             graph_from_adjacency_matrix([[1, 1, 1], [1, 1, 1]])
+    def test_random_free_form(self):
+        g = OpenDigraph.random(5, 10, bound=20,form="free")
+        self.assertTrue(g.is_well_formed())
 
+    def test_random_DAG_form(self):
+        g = OpenDigraph.random(5, 10, bound=20,form="DAG")
+        self.assertTrue(g.is_well_formed())
+        #self.assertTrue(g.is_directed_acyclic_graph())
+
+    def test_random_oriented_form(self):
+        g = OpenDigraph.random(5, 10, bound=20,form="oriented")
+        self.assertTrue(g.is_well_formed())
+        #self.assertTrue(g.is_oriented())
+
+    def test_random_loop_free_form(self):
+        g = OpenDigraph.random(5, 10, bound=20,form="loop-free")
+        self.assertTrue(g.is_well_formed())
+        #self.assertTrue(g.is_loop_free())
+
+    def test_random_undirected_form(self):
+        g = OpenDigraph.random(5, 10, bound=20,form="undirected")
+        self.assertTrue(g.is_well_formed())
+        #self.assertTrue(g.is_undirected())
+
+    def test_random_loop_free_undirected_form(self):
+        g = OpenDigraph.random(5, 10, bound=20,form="loop-free undirected")
+        self.assertTrue(g.is_well_formed())
+        #self.assertTrue(g.is_loop_free())
+        #self.assertTrue(g.is_undirected())
 
 if __name__ == '__main__':  # the following code is called only when
     unittest.main()  # precisely this file is run
