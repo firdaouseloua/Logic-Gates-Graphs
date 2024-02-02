@@ -550,7 +550,7 @@ def random_int_list(n: int, bound: int, unique=False) -> List[int]:
 
 
 def random_int_matrix(n: int, bound: int, unique=False, null_diag=True, symmetric=False,
-                      oriented=False) -> List[List[int]]:
+                      oriented=False, dag=False) -> List[List[int]]:
     """
     Returns a matrix of nxn random integrers between 0 and n
     :param n: int; numbers of rows and columns wanted
@@ -559,9 +559,10 @@ def random_int_matrix(n: int, bound: int, unique=False, null_diag=True, symmetri
     :param null_diag: bool; set True if you want the diagonal to be zeros
     :param symmetric: bool; set True if you want the matrix to be symmetric
     :param oriented: bool; set True if you want the matrix to define an oriented graph
+    :param dag: bool; set True if you want the matrix to define an acyclic graph
     """
-    if symmetric and oriented:
-        raise ValueError("Matrix cannot be symmetric and oriented")
+    if symmetric and (oriented or dag):
+        raise ValueError("Matrix cannot be symmetric and oriented/acyclic")
 
     res = []
     for _ in range(n):
@@ -581,6 +582,11 @@ def random_int_matrix(n: int, bound: int, unique=False, null_diag=True, symmetri
             for j in range(i+1, n):
                 if res[i][j] > 0:
                     res[j][i] = 0
+
+    if dag:
+        for i in range(n):
+            for j in range(i+1, n):
+                res[j][i] = 0
 
     return res
 

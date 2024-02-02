@@ -377,6 +377,11 @@ class InitTest(unittest.TestCase):
                 if m[i][j] > 0:
                     self.assertEqual(0, m[j][i])
 
+        m = random_int_matrix(5, 10, dag=True)
+        for i in range(5):
+            for j in range(i+1, 5):
+                self.assertEqual(0, m[j][i])
+
     def test_graph_from_adjacency_matrix_OpenDigraph(self):
         m = [[0, 1, 1, 0, 0],
              [0, 0, 0, 1, 2],
