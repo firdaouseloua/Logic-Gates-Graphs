@@ -3,7 +3,7 @@ import sys
 import os
 root = os.path.normpath(os.path.join(os.path.dirname(__file__)))
 sys.path.append(root)  # allows us to fetch files from the project root
-from Modules.open_digraph import *
+from modules.open_digraph import *
 
 
 class InitTest(unittest.TestCase):
@@ -281,7 +281,7 @@ class InitTest(unittest.TestCase):
             g.add_output_node(2, 7)  # 7 is not a valid parent ID
             g.add_output_node(1, 2)  # 1 is not a valid ID
 
-    def test_is_well_formed(self):
+    def test_is_well_formed_OpenDigraph(self):
         # Test a well-formed graph
         n0 = Node(0, 'Orsay', {3: 1, 4: 1}, {})
         n1 = Node(1, 'Le Guichet', {}, {6: 1})
@@ -382,7 +382,7 @@ class InitTest(unittest.TestCase):
             for j in range(i+1, 5):
                 self.assertEqual(0, m[j][i])
 
-    def test_graph_from_adjacency_matrix_OpenDigraph(self):
+    def test_graph_from_adjacency_matrix(self):
         m = [[0, 1, 1, 0, 0],
              [0, 0, 0, 1, 2],
              [0, 0, 0, 2, 0],
@@ -397,42 +397,63 @@ class InitTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             graph_from_adjacency_matrix([[1, 1, 1], [1, 1, 1]])
 
-    def test_random_free_form(self):
+    # For these tests, we need to test if the code either is a well_formed_graph or raises an error
+    # See next class how to do it correctly with no try/except
+    def test_random_OpenDigraph(self):
+        # Free Form
         graph = OpenDigraph.random(n=10, bound=9, form='free')
         self.assertTrue(graph.is_well_formed())
 
-    def test_random_dag_form(self):
+        # DAG Form
         graph = OpenDigraph.random(n=10, bound=9, form='DAG')
         self.assertTrue(graph.is_well_formed())
 
-    def test_random_oriented_graph_form(self):
+        # Oriented Form
         graph = OpenDigraph.random(n=10, bound=9, form='oriented')
         self.assertTrue(graph.is_well_formed())
 
-    def test_random_loop_free_form(self):
+        # Loop-Free Form
         graph = OpenDigraph.random(n=10, bound=9, form='loop-free')
         self.assertTrue(graph.is_well_formed())
 
-    def test_random_undirected_graph_form(self):
+        # Undirected Form
         graph = OpenDigraph.random(n=10, bound=9, form='undirected')
         self.assertTrue(graph.is_well_formed())
 
-    def test_random_loop_free_undirected_form(self):
-        graph = OpenDigraph.random(n=10, bound=9, form='loop-free_Undirected')
+        # Loop-Free Undirected Form
+        graph = OpenDigraph.random(n=10, bound=9, form='loop-free_undirected')
         self.assertTrue(graph.is_well_formed())
 
-    def test_random_conflicting_options(self):
+        # Inputs/Outputs Consistency
         with self.assertRaises(ValueError):
-            OpenDigraph.random(n=10, bound=9, form='DAG oriented')
+            OpenDigraph.random(n=10, bound=9, inputs=5, outputs=5)
+        # self.assertEqual(len(graph.get_input_ids()), 5)
+        # self.assertEqual(len(graph.get_output_ids()), 5)
 
-    def test_random_inputs_outputs_consistency(self):
-        graph = OpenDigraph.random(n=10, bound=9, inputs=5, outputs=5)
-        self.assertEqual(len(graph.get_input_ids()), 5)
-        self.assertEqual(len(graph.get_output_ids()), 5)
-
-    def test_random_invalid_form(self):
+        # Invalid Form
         with self.assertRaises(ValueError):
             OpenDigraph.random(n=10, bound=9, form='invalid_form')
+
+        # Invalid Inputs/Outputs Values
+        with self.assertRaises(ValueError):
+            OpenDigraph.random(n=10, bound=9, inputs=5, outputs=6, form='oriented')
+            OpenDigraph.random(n=10, bound=9, inputs=11, outputs=0, form='oriented')
+            OpenDigraph.random(n=10, bound=9, inputs=0, outputs=11, form='oriented')
+
+    def test_adjency_matrix_OpenDigraph(self):
+        m = [[0, 1, 1, 0, 0],
+             [0, 0, 0, 1, 2],
+             [0, 0, 0, 2, 0],
+             [1, 0, 0, 0, 1],
+             [0, 0, 0, 0, 0]]
+        n1 = Node(0, '0', {3: 1}, {1: 1, 2: 1})
+        n2 = Node(1, '1', {0: 1}, {3: 1, 4: 2})
+        n3 = Node(2, '2', {0: 1}, {3: 2})
+        n4 = Node(3, '3', {1: 1, 2: 2}, {0: 1, 4: 1})
+        n5 = Node(4, '4', {1: 2, 3: 1}, {})
+        g = OpenDigraph([], [], [n1, n2, n3, n4, n5])
+        self.assertEqual(m, g.adjacency_matrix())
+
 
 if __name__ == '__main__':  # the following code is called only when
     unittest.main()  # precisely this file is run

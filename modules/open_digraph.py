@@ -537,27 +537,12 @@ class OpenDigraph:  # for open directed graph
         :param bound: int; maximum value for edge weights
         :param inputs: int; number of input nodes (if 0, randomly chosen)
         :param outputs: int; number of output nodes (if 0, randomly chosen)
-        :param form: str; form of the graph ('free', 'DAG', 'oriented', 'loop-free', 'undirected', 'loop-free_undirected')
+        :param form: str; form of the graph
         :return: OpenDigraph; randomly generated graph
         """
-        if form not in ["free", "DAG", "oriented", "loop-free", "undirected", "loop-free_Undirected"]:
-            raise ValueError("Invalid graph form")
-
-        # Check for conflicting options
-        
-
-        if form in ['oriented', 'undirected', 'loop-free_Undirected'] and 'DAG' in form:
-           raise ValueError("Cannot generate both oriented/undirected and DAG graphs simultaneously")
-
-        if form == "oriented" and ("undirected" in form or "loop-free" in form):
-            raise ValueError("Conflicting options for graph form")
-        if "loop-free" in form and "undirected" in form:
-            raise ValueError("Conflicting options for graph form")
-
-        if inputs < 0 or outputs < 0 or n < inputs or n < outputs:
+        if inputs < 0 or outputs < 0 or n < inputs + outputs:
             raise ValueError("Invalid input/output values")
 
-        matrix = []
         # Generate adjacency matrix according to the specified form
         if form == "free":
             matrix = random_int_matrix(n, bound)
@@ -566,18 +551,30 @@ class OpenDigraph:  # for open directed graph
         elif form == "oriented":
             matrix = random_int_matrix(n, bound, oriented=True)
         elif form == "loop-free":
-            matrix = random_int_matrix(n, bound, null_diag=False)
+            matrix = random_int_matrix(n, bound, null_diag=True)
         elif form == "undirected":
             matrix = random_int_matrix(n, bound, symmetric=True)
         elif form == "loop-free_undirected":
-            matrix = random_int_matrix(n, bound, symmetric=True, null_diag=False)
+            matrix = random_int_matrix(n, bound, symmetric=True, null_diag=True)
+        else:
+            raise ValueError("Invalid graph form")
 
         # Create OpenDigraph instance from adjacency matrix
         graph = graph_from_adjacency_matrix(matrix)
 
-        # Select inputs and outputs randomly
+        # Select inputs and outputs randomly (by checking for every node if it's a possible input/output node)
         node_ids = graph.get_node_ids()
+
+        inputs_list = [i for i in node_ids if len(graph.get_node_by_id(i).get_parents()) == 0 and
+                       len(graph.get_node_by_id(i).get_children()) == 1]
+        if len(inputs_list) < inputs:
+            raise ValueError("This graph has too few possibilities for inputs nodes")
         inputs_list = sample(node_ids, inputs)
+
+        outputs_list = [i for i in node_ids if len(graph.get_node_by_id(i).get_children()) == 0 and
+                        len(graph.get_node_by_id(i).get_parents()) == 1 and i not in inputs_list]
+        if len(outputs_list) < outputs:
+            raise ValueError("This graph has too few possibilities for outputs nodes")
         outputs_list = sample(node_ids, outputs)
         
         for node_id in inputs_list:
@@ -591,6 +588,7 @@ class OpenDigraph:  # for open directed graph
         """
         Returns a dictionary mapping each node ID to a unique integer index.
         The indices are in the range 0 ≤ i < n, where n is the number of nodes in the graph.
+        :return: Dict[int, int];
         """
         node_ids = sorted(self.get_node_ids())  # Sort the node IDs
         node_index_map = {node_id: index for index, node_id in enumerate(node_ids)}  # Map each node ID to its index
@@ -600,9 +598,7 @@ class OpenDigraph:  # for open directed graph
         """
         Generates an adjacency matrix for the graph, ignoring inputs and outputs.
         Considers all nodes in the graph.
-        
-        Returns:
-            List[List[int]]: The adjacency matrix representing the connections between nodes.
+        :return: List[List[int]]; The adjacency matrix representing the connections between nodes.
         """
         # Get all nodes and their IDs
         nodes = self.get_nodes()
@@ -610,28 +606,24 @@ class OpenDigraph:  # for open directed graph
         
         # Initialize the adjacency matrix
         n = len(node_ids)
-        adj_matrix = [[0] * n for _ in range(n)]
+        adj_matrix = [[0 for _ in range(n)] for _ in range(n)]
         
         # Populate the adjacency matrix based on connections between nodes
         for node in nodes:
             node_id = node.get_id()
-            index_i = node_ids.index(node_id)  # Get the index of the node
             children = node.get_children()
-            for child_id, _ in children.items():
-                index_j = node_ids.index(child_id)  # Get the index of the child node
-                adj_matrix[index_i][index_j] = 1  # Set the corresponding cell to 1
+            for child_id, child_value in children.items():
+                adj_matrix[node_id][child_id] = child_value  # Set the corresponding cell to 1
                 
         return adj_matrix
-
-    
 
 
 def random_int_list(n: int, bound: int, unique=False) -> List[int]:
     """
-    Returns a list of n random integrers between 0 and n
-    :param n: int; numbers of integrers wanted
-    :param bound: int; maximum value of the integrers
-    :param unique: bool; set True if you want only unique integrers
+    Returns a list of n random integers between 0 and n
+    :param n: int; numbers of integers wanted
+    :param bound: int; maximum value of the integers
+    :param unique: bool; set True if you want only unique integers
     """
     if unique and n > bound + 1:
         raise ValueError("Bound too small compared to n")
@@ -648,10 +640,10 @@ def random_int_list(n: int, bound: int, unique=False) -> List[int]:
 def random_int_matrix(n: int, bound: int, unique=False, null_diag=True, symmetric=False,
                       oriented=False, dag=False) -> List[List[int]]:
     """
-    Returns a matrix of nxn random integrers between 0 and n
+    Returns a matrix of nxn random integers between 0 and n
     :param n: int; numbers of rows and columns wanted
-    :param bound: int; maximum value of the integrers
-    :param unique: bool; set True if you want only unique integrers
+    :param bound: int; maximum value of the integers
+    :param unique: bool; set True if you want only unique integers
     :param null_diag: bool; set True if you want the diagonal to be zeros
     :param symmetric: bool; set True if you want the matrix to be symmetric
     :param oriented: bool; set True if you want the matrix to define an oriented graph
@@ -711,5 +703,3 @@ def graph_from_adjacency_matrix(matrix: List[List[int]]) -> OpenDigraph:
         nodes.append(node)
 
     return OpenDigraph([], [], nodes)
-
-
