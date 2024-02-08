@@ -3,7 +3,7 @@ import sys
 import os
 root = os.path.normpath(os.path.join(os.path.dirname(__file__)))
 sys.path.append(root)  # allows us to fetch files from the project root
-from modules.open_digraph import *
+from Modules.open_digraph import *
 
 
 class InitTest(unittest.TestCase):
@@ -396,35 +396,43 @@ class InitTest(unittest.TestCase):
         self.assertEqual(OpenDigraph([], [], [n1, n2, n3, n4, n5]), graph_from_adjacency_matrix(m))
         with self.assertRaises(ValueError):
             graph_from_adjacency_matrix([[1, 1, 1], [1, 1, 1]])
+
     def test_random_free_form(self):
-        g = OpenDigraph.random(5, 10, bound=20,form="free")
-        self.assertTrue(g.is_well_formed())
+        graph = OpenDigraph.random(n=10, bound=9, form='free')
+        self.assertTrue(graph.is_well_formed())
 
-    def test_random_DAG_form(self):
-        g = OpenDigraph.random(5, 10, bound=20,form="DAG")
-        self.assertTrue(g.is_well_formed())
-        #self.assertTrue(g.is_directed_acyclic_graph())
+    def test_random_dag_form(self):
+        graph = OpenDigraph.random(n=10, bound=9, form='DAG')
+        self.assertTrue(graph.is_well_formed())
 
-    def test_random_oriented_form(self):
-        g = OpenDigraph.random(5, 10, bound=20,form="oriented")
-        self.assertTrue(g.is_well_formed())
-        #self.assertTrue(g.is_oriented())
+    def test_random_oriented_graph_form(self):
+        graph = OpenDigraph.random(n=10, bound=9, form='oriented')
+        self.assertTrue(graph.is_well_formed())
 
     def test_random_loop_free_form(self):
-        g = OpenDigraph.random(5, 10, bound=20,form="loop-free")
-        self.assertTrue(g.is_well_formed())
-        #self.assertTrue(g.is_loop_free())
+        graph = OpenDigraph.random(n=10, bound=9, form='loop-free')
+        self.assertTrue(graph.is_well_formed())
 
-    def test_random_undirected_form(self):
-        g = OpenDigraph.random(5, 10, bound=20,form="undirected")
-        self.assertTrue(g.is_well_formed())
-        #self.assertTrue(g.is_undirected())
+    def test_random_undirected_graph_form(self):
+        graph = OpenDigraph.random(n=10, bound=9, form='undirected')
+        self.assertTrue(graph.is_well_formed())
 
     def test_random_loop_free_undirected_form(self):
-        g = OpenDigraph.random(5, 10, bound=20,form="loop-free undirected")
-        self.assertTrue(g.is_well_formed())
-        #self.assertTrue(g.is_loop_free())
-        #self.assertTrue(g.is_undirected())
+        graph = OpenDigraph.random(n=10, bound=9, form='loop-free_Undirected')
+        self.assertTrue(graph.is_well_formed())
+
+    def test_random_conflicting_options(self):
+        with self.assertRaises(ValueError):
+            OpenDigraph.random(n=10, bound=9, form='DAG oriented')
+
+    def test_random_inputs_outputs_consistency(self):
+        graph = OpenDigraph.random(n=10, bound=9, inputs=5, outputs=5)
+        self.assertEqual(len(graph.get_input_ids()), 5)
+        self.assertEqual(len(graph.get_output_ids()), 5)
+
+    def test_random_invalid_form(self):
+        with self.assertRaises(ValueError):
+            OpenDigraph.random(n=10, bound=9, form='invalid_form')
 
 if __name__ == '__main__':  # the following code is called only when
     unittest.main()  # precisely this file is run
