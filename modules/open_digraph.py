@@ -198,7 +198,7 @@ class OpenDigraph:  # for open directed graph
         """
         return list(self.nodes.values())
 
-    def get(self) -> List[int]:
+    def get_node_ids(self) -> List[int]:
         """
         Returns a list of all the ids
         """
