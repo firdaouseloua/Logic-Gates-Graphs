@@ -1,5 +1,5 @@
-from typing import List, Dict, Tuple, Optional
-from random import randint, choice
+from typing import List, Dict, Tuple
+from random import randint, sample
 
 
 class Node:
@@ -529,101 +529,101 @@ class OpenDigraph:  # for open directed graph
         if not self.is_well_formed():
             raise ValueError("Graph not well-formed")
         
+    @classmethod
     def random(cls, n, bound, inputs=0, outputs=0, form="free"):
         """
         Generates a random graph according to the constraints given by the user.
-
         :param n: int; number of nodes in the graph
-        :param bound: int; maximum value of the integers
-        :param inputs: int; number of input nodes
-        :param outputs: int; number of output nodes
-        :param form: str; form of the graph ('free', 'DAG', 'oriented', 'loop-free', 'undirected', 'loop-free undirected')
-        :return: OpenDigraph; a random graph
+        :param bound: int; maximum value for edge weights
+        :param inputs: int; number of input nodes (if 0, randomly chosen)
+        :param outputs: int; number of output nodes (if 0, randomly chosen)
+        :param form: str; form of the graph ('free', 'DAG', 'oriented', 'loop-free', 'undirected', 'loop-free_undirected')
+        :return: OpenDigraph; randomly generated graph
         """
-        nodes = []
-        loop_free = 'loop-free' in form
-        undirected = 'undirected' in form
+        if form not in ["free", "DAG", "oriented", "loop-free", "undirected", "loop-free_Undirected"]:
+            raise ValueError("Invalid graph form")
 
-        if form in ("free", "loop-free", "undirected", "loop-free undirected"):
-            # General graph
-            for i in range(n):
-                label = str(i)
-                parents = {}
-                children = {}
-                if not form.endswith("undirected"):
-                    # Add parents
-                    for j in range(i):
-                        if choice([True, False]) and (not loop_free or j != i):
-                            parents[j] = 1
-                            if not undirected:
-                                children[i] = 1
-                # Add children
-                for j in range(i + 1, n):
-                    if choice([True, False]) and (not loop_free or j != i):
-                        children[j] = 1
-                        if not undirected:
-                            parents[i] = 1
-                nodes.append(Node(i, label, parents, children))
+        # Check for conflicting options
+        
 
+        if form in ['oriented', 'undirected', 'loop-free_Undirected'] and 'DAG' in form:
+           raise ValueError("Cannot generate both oriented/undirected and DAG graphs simultaneously")
+
+        if form == "oriented" and ("undirected" in form or "loop-free" in form):
+            raise ValueError("Conflicting options for graph form")
+        if "loop-free" in form and "undirected" in form:
+            raise ValueError("Conflicting options for graph form")
+
+        if inputs < 0 or outputs < 0 or n < inputs or n < outputs:
+            raise ValueError("Invalid input/output values")
+
+        matrix = []
+        # Generate adjacency matrix according to the specified form
+        if form == "free":
+            matrix = random_int_matrix(n, bound)
         elif form == "DAG":
-            # Directed Acyclic Graph
-            for i in range(n):
-                label = str(i)
-                parents = {}
-                children = {}
-                # Add parents (ensure acyclic)
-                for j in range(i):
-                    if choice([True, False]) and (not loop_free or j != i):
-                        parents[j] = 1
-                        children[i] = 1
-                nodes.append(Node(i, label, parents, children))
-
-                # Check if the graph is well-formed (acyclic)
-                if not  cls(nodes=nodes).is_well_formed():
-                    # If not well-formed, remove the last node and retry
-                    nodes.pop()
-
+            matrix = random_int_matrix(n, bound, dag=True)
         elif form == "oriented":
-            # Oriented graph
-            for i in range(n):
-                label = str(i)
-                parents = {}
-                children = {}
-                # Add parents (allow cycles)
-                for j in range(i):
-                    if choice([True, False]) and (not loop_free or j != i):
-                        parents[j] = 1
-                        children[i] = 1
-                nodes.append(Node(i, label, parents, children))
+            matrix = random_int_matrix(n, bound, oriented=True)
+        elif form == "loop-free":
+            matrix = random_int_matrix(n, bound, null_diag=False)
+        elif form == "undirected":
+            matrix = random_int_matrix(n, bound, symmetric=True)
+        elif form == "loop-free_undirected":
+            matrix = random_int_matrix(n, bound, symmetric=True, null_diag=False)
 
-        else:
-            raise ValueError(f"Invalid form: {form}")
+        # Create OpenDigraph instance from adjacency matrix
+        graph = graph_from_adjacency_matrix(matrix)
 
-        return cls(inputs=[], outputs=[], nodes=nodes)
+        # Select inputs and outputs randomly
+        node_ids = graph.get_node_ids()
+        inputs_list = sample(node_ids, inputs)
+        outputs_list = sample(node_ids, outputs)
+        
+        for node_id in inputs_list:
+            graph.add_input_id(node_id)
+        for node_id in outputs_list:
+            graph.add_output_id(node_id)
+
+        return graph
     
-    def get_node_index_mapping(self) -> Dict[int, int]:
+    def node_id_to_index_map(self) -> Dict[int, int]:
         """
-        Returns a dictionary mapping node ids to unique integers 0 ≤ i < n.
+        Returns a dictionary mapping each node ID to a unique integer index.
+        The indices are in the range 0 ≤ i < n, where n is the number of nodes in the graph.
         """
-        node_ids = self.get_node_ids()
-        return {node_id: i for i, node_id in enumerate(node_ids)}
+        node_ids = sorted(self.get_node_ids())  # Sort the node IDs
+        node_index_map = {node_id: index for index, node_id in enumerate(node_ids)}  # Map each node ID to its index
+        return node_index_map
 
     def adjacency_matrix(self) -> List[List[int]]:
         """
-        Returns the adjacency matrix for the graph (ignores inputs and outputs).
+        Generates an adjacency matrix for the graph, ignoring inputs and outputs.
+        Considers all nodes in the graph.
+        
+        Returns:
+            List[List[int]]: The adjacency matrix representing the connections between nodes.
         """
-        node_index_mapping = self.get_node_index_mapping()
-        n = len(node_index_mapping)
+        # Get all nodes and their IDs
+        nodes = self.get_nodes()
+        node_ids = self.get_node_ids()
+        
+        # Initialize the adjacency matrix
+        n = len(node_ids)
         adj_matrix = [[0] * n for _ in range(n)]
-
-        for node_id, node in self.get_id_node_map().items():
-            i = node_index_mapping[node_id]
-
-            for child_id, multiplicity in node.get_children().items():
-                j = node_index_mapping[child_id]
-                adj_matrix[i][j] = multiplicity
-
+        
+        # Populate the adjacency matrix based on connections between nodes
+        for node in nodes:
+            node_id = node.get_id()
+            index_i = node_ids.index(node_id)  # Get the index of the node
+            children = node.get_children()
+            for child_id, _ in children.items():
+                index_j = node_ids.index(child_id)  # Get the index of the child node
+                adj_matrix[index_i][index_j] = 1  # Set the corresponding cell to 1
+                
         return adj_matrix
+
+    
 
 
 def random_int_list(n: int, bound: int, unique=False) -> List[int]:
