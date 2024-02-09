@@ -617,6 +617,83 @@ class OpenDigraph:  # for open directed graph
                 
         return adj_matrix
 
+    def save_as_dot_file(self,path,verbose=False):
+        """
+        Save the graph in .dot format at the specified path.
+
+        Args:
+            path (str): The path where the .dot file will be saved.
+            verbose (bool, optional): If True, includes both label and id for nodes.
+
+        Returns:
+            None
+        """
+        with open(path, 'w') as file:
+            file.write("digraph G {\n")
+            
+            # Write nodes
+            for node in self.get_nodes():
+                label = node.get_label()
+                if verbose:
+                    label = f"{node.get_label()} (id: {node.get_id()})"
+                file.write(f"v{node.get_id()} [label=\"{label}\"];\n")
+            
+            # Write edges
+            for node in self.get_nodes():
+                for child_id, multiplicity in node.get_children().items():
+                    file.write(f"v{node.get_id()} -> v{child_id} [label=\"{multiplicity}\"];\n")
+            
+            file.write("}\n")
+    
+    @classmethod
+    def from_dot_file(cls,path):
+        """
+        Construct an OpenDigraph from a .dot file.
+        :param path: str; Path to the .dot file.
+        :return: OpenDigraph; An instance of OpenDigraph constructed from the .dot file.
+        """
+        inputs = []
+        outputs = []
+        nodes = []
+        
+        with open(path,'r') as file :
+            lines = file.readlines()
+        # Parse the lines to extract node information
+            for line in lines:
+                clean_line = line.strip()
+                if clean_line.startswith("v"):
+                    parts = clean_line.split('[label="')
+                    node_id = parts[0].strip()
+                    if node_id.isdigit():
+                        node_id = int(node_id)
+                    label_parts = parts[1].split('"')
+                    if len(label_parts) > 1:
+                        label = label_parts[1]
+                    else:
+                        label = None
+                    if '"' in parts[1]:
+                        verbose = True
+                    else:
+                        verbose = False
+                    if verbose:
+                        label += f" ({node_id})"
+                    nodes.append(Node(identity=node_id, label=label, parents={}, children={}))
+
+                elif "->" in clean_line:
+                    parts = line.split('->')
+                    src = int(parts[0].strip())
+                    tgt = int(parts[1].split(';')[0].strip())
+                    nodes[src - 1].add_child_id(tgt)
+                    nodes[tgt - 1].add_parent_id(src)
+
+        # Identify input and output nodes
+        for node in nodes:
+            if node.get_id() in node.get_parents():
+                inputs.append(node.get_id())
+            if node.get_id() in node.get_children():
+                outputs.append(node.get_id())
+
+        return cls(inputs=inputs, outputs=outputs, nodes=nodes)
 
 def random_int_list(n: int, bound: int, unique=False) -> List[int]:
     """
