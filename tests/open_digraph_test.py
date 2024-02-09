@@ -427,8 +427,8 @@ class InitTest(unittest.TestCase):
         # Inputs/Outputs Consistency
         with self.assertRaises(ValueError):
             OpenDigraph.random(n=10, bound=9, inputs=5, outputs=5)
-        # self.assertEqual(len(graph.get_input_ids()), 5)
-        # self.assertEqual(len(graph.get_output_ids()), 5)
+            self.assertEqual(len(graph.get_input_ids()), 5)
+            self.assertEqual(len(graph.get_output_ids()), 5)
 
         # Invalid Form
         with self.assertRaises(ValueError):
@@ -439,6 +439,33 @@ class InitTest(unittest.TestCase):
             OpenDigraph.random(n=10, bound=9, inputs=5, outputs=6, form='oriented')
             OpenDigraph.random(n=10, bound=9, inputs=11, outputs=0, form='oriented')
             OpenDigraph.random(n=10, bound=9, inputs=0, outputs=11, form='oriented')
+            
+    def test_save_as_dot_file(self):
+        # Create a graph
+        graph = OpenDigraph.empty()
+        graph.add_node(label="A")
+        graph.add_node(label="B")
+        graph.add_edge(0, 1)
+        
+        # Save the graph
+        file_path = "test_graph.dot"
+        graph.save_as_dot_file(file_path)
+        
+        # Check if the file exists
+        self.assertTrue(os.path.exists(file_path))
+        
+        # Check the content of the file
+        with open(file_path, 'r') as file:
+            content = file.read()
+            expected_content = "digraph G {\n"\
+                               "v0 [label=\"A\"];\n"\
+                               "v1 [label=\"B\"];\n"\
+                               "v0 -> v1 [label=\"1\"];\n"\
+                               "}\n"
+            self.assertEqual(content, expected_content)
+        
+        # Remove the file after the test
+        os.remove(file_path)
 
     def test_adjency_matrix_OpenDigraph(self):
         m = [[0, 1, 1, 0, 0],
@@ -453,6 +480,54 @@ class InitTest(unittest.TestCase):
         n5 = Node(4, '4', {1: 2, 3: 1}, {})
         g = OpenDigraph([], [], [n1, n2, n3, n4, n5])
         self.assertEqual(m, g.adjacency_matrix())
+        
+    def test_from_dot_file(self):
+        # Create a sample .dot file content
+        dot_content = """
+        digraph G {
+            v0 [label="Node 0"];
+            v1 [label="Node 1"];
+            v2 [label="Node 2"];
+            v3 [label="Node 3"];
+            v0 -> v1;
+            v1 -> v2;
+            v1 -> v3;
+        }
+        """
+        # Save the sample .dot content to a file
+        with open("sample_graph.dot", "w") as file:
+            file.write(dot_content)
+        
+        # Load the graph from the .dot file
+        loaded_graph = OpenDigraph.from_dot_file("sample_graph.dot")
+        
+        # Verify the loaded graph structure
+        self.assertListEqual(loaded_graph.get_input_ids(), [0])
+        self.assertListEqual(loaded_graph.get_output_ids(), [2, 3])
+        self.assertEqual(len(loaded_graph.get_nodes()), 4)
+        self.assertEqual(loaded_graph.get_nodes()[0].get_label(), "Node 0")
+        self.assertEqual(loaded_graph.get_nodes()[1].get_label(), "Node 1")
+        self.assertEqual(loaded_graph.get_nodes()[2].get_label(), "Node 2")
+        self.assertEqual(loaded_graph.get_nodes()[3].get_label(), "Node 3")
+        self.assertDictEqual(loaded_graph.get_nodes()[0].get_children(), {1: 1})
+        self.assertDictEqual(loaded_graph.get_nodes()[1].get_children(), {2: 1, 3: 1})
+
+        # Clean up: Delete the sample .dot file
+        import os
+        os.remove("sample_graph.dot")
+# Creating a simple example graph
+node1 = Node(identity=1, label="A", parents={}, children={2: 1, 3: 1})
+node2 = Node(identity=2, label="B", parents={1: 1}, children={4: 1})
+node3 = Node(identity=3, label="C", parents={1: 1}, children={4: 1})
+node4 = Node(identity=4, label="D", parents={2: 1, 3: 1}, children={})
+
+graph = OpenDigraph(inputs=[1], outputs=[4], nodes=[node1, node2, node3, node4])
+
+
+
+# Save the graph as a .dot file
+graph.save_as_dot_file("example_graph.dot", verbose=True)
+
 
 
 if __name__ == '__main__':  # the following code is called only when
