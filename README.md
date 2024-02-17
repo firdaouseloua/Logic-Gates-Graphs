@@ -15,6 +15,7 @@
     - session2_ecr.pdf  
     - session3_ecr.pdf
     - session4_ecr.pdf
+    - session5_ecr.pdf
     - CourseNewECR.pdf
 
 
