@@ -31,8 +31,8 @@ Add a 'x' in the brackets when the week is done:
 - [x] Week 1 
 - [x] Week 2
 - [x] Week 3
-- [ ] Week 4
-- [ ] Week 5
+- [x] Week 4
+- [x] Week 5
 - [ ] Week 6
 - [ ] Week 7
 - [ ] Week 8
