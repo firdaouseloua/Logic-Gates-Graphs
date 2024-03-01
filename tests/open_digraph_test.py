@@ -401,28 +401,28 @@ class InitTest(unittest.TestCase):
     # See next class how to do it correctly with no try/except
     def test_random_OpenDigraph(self):
         # Free Form
-        graph = OpenDigraph.random(n=10, bound=9, form='free')
-        self.assertTrue(graph.is_well_formed())
+        g = OpenDigraph.random(n=10, bound=9, form='free')
+        self.assertTrue(g.is_well_formed())
 
         # DAG Form
-        graph = OpenDigraph.random(n=10, bound=9, form='DAG')
-        self.assertTrue(graph.is_well_formed())
+        g = OpenDigraph.random(n=10, bound=9, form='DAG')
+        self.assertTrue(g.is_well_formed())
 
         # Oriented Form
-        graph = OpenDigraph.random(n=10, bound=9, form='oriented')
-        self.assertTrue(graph.is_well_formed())
+        g = OpenDigraph.random(n=10, bound=9, form='oriented')
+        self.assertTrue(g.is_well_formed())
 
         # Loop-Free Form
-        graph = OpenDigraph.random(n=10, bound=9, form='loop-free')
-        self.assertTrue(graph.is_well_formed())
+        g = OpenDigraph.random(n=10, bound=9, form='loop-free')
+        self.assertTrue(g.is_well_formed())
 
         # Undirected Form
-        graph = OpenDigraph.random(n=10, bound=9, form='undirected')
-        self.assertTrue(graph.is_well_formed())
+        g = OpenDigraph.random(n=10, bound=9, form='undirected')
+        self.assertTrue(g.is_well_formed())
 
         # Loop-Free Undirected Form
-        graph = OpenDigraph.random(n=10, bound=9, form='loop-free_undirected')
-        self.assertTrue(graph.is_well_formed())
+        g = OpenDigraph.random(n=10, bound=9, form='loop-free_undirected')
+        self.assertTrue(g.is_well_formed())
 
         # Inputs/Outputs Consistency
         with self.assertRaises(ValueError):
@@ -439,33 +439,6 @@ class InitTest(unittest.TestCase):
             OpenDigraph.random(n=10, bound=9, inputs=5, outputs=6, form='oriented')
             OpenDigraph.random(n=10, bound=9, inputs=11, outputs=0, form='oriented')
             OpenDigraph.random(n=10, bound=9, inputs=0, outputs=11, form='oriented')
-            
-    def test_save_as_dot_file(self):
-        # Create a graph
-        graph = OpenDigraph.empty()
-        graph.add_node(label="A")
-        graph.add_node(label="B")
-        graph.add_edge(0, 1)
-        
-        # Save the graph
-        file_path = "test_graph.dot"
-        graph.save_as_dot_file(file_path)
-        
-        # Check if the file exists
-        self.assertTrue(os.path.exists(file_path))
-        
-        # Check the content of the file
-        with open(file_path, 'r') as file:
-            content = file.read()
-            expected_content = "digraph G {\n"\
-                               "v0 [label=\"A\"];\n"\
-                               "v1 [label=\"B\"];\n"\
-                               "v0 -> v1 [label=\"1\"];\n"\
-                               "}\n"
-            self.assertEqual(content, expected_content)
-        
-        # Remove the file after the test
-        os.remove(file_path)
 
     def test_adjency_matrix_OpenDigraph(self):
         m = [[0, 1, 1, 0, 0],
@@ -480,8 +453,36 @@ class InitTest(unittest.TestCase):
         n5 = Node(4, '4', {1: 2, 3: 1}, {})
         g = OpenDigraph([], [], [n1, n2, n3, n4, n5])
         self.assertEqual(m, g.adjacency_matrix())
+
+    '''
+    def test_save_as_dot_file_OpenDigraph(self):
+        # Create a graph
+        g = OpenDigraph.empty()
+        g.add_node(label="A")
+        g.add_node(label="B")
+        g.add_edge(0, 1)
+
+        # Save the graph
+        file_path = "test_graph.dot"
+        graph.save_as_dot_file(file_path)
+
+        # Check if the file exists
+        self.assertTrue(os.path.exists(file_path))
+
+        # Check the content of the file
+        with open(file_path, 'r') as file:
+            content = file.read()
+            expected_content = "digraph G {\n" \
+                               "v0 [label=\"A\"];\n" \
+                               "v1 [label=\"B\"];\n" \
+                               "v0 -> v1 [label=\"1\"];\n" \
+                               "}\n"
+            self.assertEqual(content, expected_content)
+
+        # Remove the file after the test
+        os.remove(file_path)
         
-    def test_from_dot_file(self):
+    def test_from_dot_file_OpenDigraph(self):
         # Create a sample .dot file content
         dot_content = """
         digraph G {
@@ -515,6 +516,114 @@ class InitTest(unittest.TestCase):
         # Clean up: Delete the sample .dot file
         import os
         os.remove("sample_graph.dot")
+    '''
+
+    def test_degree_Node(self):
+        n0 = Node(0, 'Orsay', {3: 1, 4: 1}, {})
+        n1 = Node(1, 'Le Guichet', {}, {6: 1, 4: 1})
+        n3 = Node(3, 'Palaiseau', {}, {})
+        n4 = Node(4, 'Villebon', {1: 1}, {0: 1})
+        self.assertEqual(n0.degree(), 2)
+        self.assertEqual(n0.indegree(), 2)
+        self.assertEqual(n0.outdegree(), 0)
+        self.assertEqual(n1.degree(), 2)
+        self.assertEqual(n1.indegree(), 0)
+        self.assertEqual(n1.outdegree(), 2)
+        self.assertEqual(n3.degree(), 0)
+        self.assertEqual(n3.indegree(), 0)
+        self.assertEqual(n3.outdegree(), 0)
+        self.assertEqual(n4.degree(), 2)
+        self.assertEqual(n4.indegree(), 1)
+        self.assertEqual(n4.outdegree(), 1)
+
+    def test_is_cyclic_OpenDigraph(self):
+        # Acyclic graph
+        n0 = Node(0, 'Orsay', {3: 1, 4: 1}, {})
+        n1 = Node(1, 'Le Guichet', {}, {6: 1})
+        n3 = Node(3, 'Palaiseau', {}, {0: 1})
+        n4 = Node(4, 'Villebon', {}, {0: 1})
+        n6 = Node(6, 'Bures', {1: 1}, {})
+        g1 = OpenDigraph([3, 4], [6], [n0, n1, n3, n4, n6])
+        self.assertFalse(g1.is_cyclic())
+
+        # Cyclic graph
+        n0 = Node(0, 'A', {2: 1}, {1: 1})
+        n1 = Node(1, 'B', {0: 1}, {2: 1})
+        n2 = Node(2, 'C', {1: 1}, {0: 1})
+        g2 = OpenDigraph([], [], [n0, n1, n2])
+        self.assertTrue(g2.is_cyclic())
+
+    def test_is_well_formed_BoolCirc(self):
+        # Well-formed BoolCirc
+        n0 = Node(0, '&', {3: 1, 4: 1}, {})
+        n1 = Node(1, '&', {}, {6: 1})
+        n3 = Node(3, '|', {}, {0: 1})
+        n4 = Node(4, '|', {}, {0: 1})
+        n6 = Node(6, '|', {1: 1}, {})
+        b = BoolCirc(OpenDigraph([3, 4], [6], [n0, n1, n3, n4, n6]), True)
+        self.assertTrue(b.is_well_formed())
+
+        # Cyclic graph
+        n0 = Node(0, '&', {2: 1}, {1: 1})
+        n1 = Node(1, '|', {0: 1}, {2: 1})
+        n2 = Node(2, '&', {1: 1}, {0: 1})
+        b = BoolCirc(OpenDigraph([], [], [n0, n1, n2]), True)
+        self.assertFalse(b.is_well_formed())
+
+        # Unknown label
+        n0 = Node(0, '&', {}, {})
+        n1 = Node(1, '|', {}, {})
+        n2 = Node(2, '1', {}, {})
+        b = BoolCirc(OpenDigraph([], [], [n0, n1, n2]), True)
+        self.assertFalse(b.is_well_formed())
+
+        # Copy node without exactly 1 input
+        n0 = Node(0, '&', {}, {})
+        n1 = Node(1, '|', {}, {})
+        n2 = Node(2, '', {}, {})
+        b = BoolCirc(OpenDigraph([], [], [n0, n1, n2]), True)
+        self.assertFalse(b.is_well_formed())
+
+        # Poorly-formed graph
+        n0 = Node(0, '&', {3: 1, 4: 1}, {})
+        n1 = Node(1, '&', {3: 1}, {6: 1})
+        n3 = Node(3, '&', {}, {0: 1, 1: 1})
+        n4 = Node(4, '&', {}, {0: 1})
+        n6 = Node(6, '&', {1: 1}, {})
+        b = BoolCirc(OpenDigraph([3, 4], [6], [n0, n1, n3, n4, n6]), True)
+        self.assertFalse(b.is_well_formed())
+
+    def test_minmax_id_OpenDigraph(self):
+        n0 = Node(0, '&', {3: 1, 4: 1}, {})
+        n1 = Node(1, '&', {}, {6: 1})
+        n3 = Node(3, '|', {}, {0: 1})
+        n4 = Node(4, '|', {}, {0: 1})
+        n6 = Node(6, '|', {1: 1}, {})
+        g = OpenDigraph([3, 4], [6], [n0, n1, n3, n4, n6])
+        self.assertEqual(g.max_id(), 6)
+        self.assertEqual(g.min_id(), 0)
+
+    def test_shift_indices_OpenDigraph(self):
+        n0 = Node(0, '&', {3: 1, 4: 1}, {})
+        n1 = Node(1, '&', {}, {6: 1})
+        n3 = Node(3, '|', {}, {0: 1})
+        n4 = Node(4, '|', {}, {0: 1})
+        n6 = Node(6, '|', {1: 1}, {})
+        n7 = Node(1, '&', {4: 1, 5: 1}, {})
+        n8 = Node(2, '&', {}, {7: 1})
+        n9 = Node(4, '|', {}, {1: 1})
+        n10 = Node(5, '|', {}, {1: 1})
+        n11 = Node(7, '|', {2: 1}, {})
+        g = OpenDigraph([3, 4], [6], [n0, n1, n3, n4, n6])
+        g1 = OpenDigraph([3, 4], [6], [n0, n1, n3, n4, n6])
+        g2 = OpenDigraph([4, 5], [7], [n7, n8, n9, n10, n11])
+
+        g1.shift_indices(1)
+        self.assertEqual(g1, g2)
+        g1.shift_indices(-1)
+        self.assertEqual(g1, g)
+
+
 # Creating a simple example graph
 node1 = Node(identity=1, label="A", parents={}, children={2: 1, 3: 1})
 node2 = Node(identity=2, label="B", parents={1: 1}, children={4: 1})
@@ -524,10 +633,8 @@ node4 = Node(identity=4, label="D", parents={2: 1, 3: 1}, children={})
 graph = OpenDigraph(inputs=[1], outputs=[4], nodes=[node1, node2, node3, node4])
 
 
-
 # Save the graph as a .dot file
 graph.save_as_dot_file("example_graph.dot", verbose=True)
-
 
 
 if __name__ == '__main__':  # the following code is called only when

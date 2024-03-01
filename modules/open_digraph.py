@@ -1,5 +1,9 @@
 from typing import List, Dict, Tuple
 from random import randint, sample
+import os
+import sys
+root = os.path.normpath(os.path.join(os.path.dirname(__file__)))
+sys.path.append(root)  # allows us to fetch files from the project root
 
 
 class Node:
@@ -151,20 +155,51 @@ class Node:
         if identity in self.get_children():
             del self.children[identity]
 
+    def indegree(self) -> int:
+        """
+        Calculates the incoming degree of a node in the graph
+        """
+        return len(self.get_parents())
+
+    def outdegree(self) -> int:
+        """
+        Calculates the outgoing degree of a node in the graph
+        """
+        return len(self.get_children())
+
+    def degree(self) -> int:
+        """
+        Calculates the total degree of a node in the graph
+        """
+        return self.indegree() + self.outdegree()
+        # return self.indegree() - self.outdegree()
+
 
 class OpenDigraph:  # for open directed graph
 
     # Constructors
-    def __init__(self, inputs: List[int], outputs: List[int], nodes: List[Node]) -> None:
+    def __init__(self, inputs: List[int] = None, outputs: List[int] = None, nodes: List[Node] = None) -> None:
         """
         Constructs a new OpenDigraph object
+        No argument create an empty digraph
         :param inputs: int list; the ids of the input nodes
         :param outputs: int list; the ids of the output nodes
         :param nodes: node iter;
         """
-        self.inputs = inputs
-        self.outputs = outputs
-        self.nodes = {node.id: node for node in nodes}  # self.nodes: <int,node> dict
+        if inputs is None:
+            self.inputs = []
+        else:
+            self.inputs = inputs
+
+        if outputs is None:
+            self.outputs = []
+        else:
+            self.outputs = outputs
+
+        if nodes is None:
+            self.nodes = {}
+        else:
+            self.nodes = {node.id: node for node in nodes}  # self.nodes: <int,node> dict
 
     @classmethod
     def empty(cls):
@@ -617,16 +652,11 @@ class OpenDigraph:  # for open directed graph
                 
         return adj_matrix
 
-    def save_as_dot_file(self,path,verbose=False):
+    def save_as_dot_file(self, path, verbose=False) -> None:
         """
         Save the graph in .dot format at the specified path.
-
-        Args:
-            path (str): The path where the .dot file will be saved.
-            verbose (bool, optional): If True, includes both label and id for nodes.
-
-        Returns:
-            None
+        :param path: str; the path where the .dot file will be saved
+        :param verbose: bool; if True, includes both label and id for nodes
         """
         with open(path, 'w') as file:
             file.write("digraph G {\n")
@@ -646,17 +676,17 @@ class OpenDigraph:  # for open directed graph
             file.write("}\n")
     
     @classmethod
-    def from_dot_file(cls,path):
+    def from_dot_file(cls, path: str):
         """
         Construct an OpenDigraph from a .dot file.
-        :param path: str; Path to the .dot file.
-        :return: OpenDigraph; An instance of OpenDigraph constructed from the .dot file.
+        :param path: str; Path to the .dot file
+        :return: OpenDigraph; An instance of OpenDigraph constructed from the .dot file
         """
         inputs = []
         outputs = []
         nodes = []
         
-        with open(path,'r') as file :
+        with open(path, 'r') as file:
             lines = file.readlines()
         # Parse the lines to extract node information
             for line in lines:
@@ -694,6 +724,150 @@ class OpenDigraph:  # for open directed graph
                 outputs.append(node.get_id())
 
         return cls(inputs=inputs, outputs=outputs, nodes=nodes)
+
+    def display(self, verbose=False) -> None:
+        """
+        Displays the graph representation.
+        :param verbose: bool; If True, includes both label and id for nodes in the graph
+        """
+        # Create a temporary location to store the .dot file
+        dot_file = "temp_graph.dot"
+
+        # Save the graph as a .dot file
+        self.save_as_dot_file(dot_file, verbose)
+
+        # Open the .dot file with a local viewer (assuming Graphviz is installed)
+        os.system(f"dot -Tpdf {dot_file} -o temp_graph.pdf")
+        os.system("xdg-open temp_graph.pdf")  # For Linux, opens the PDF file with the default viewer
+
+        # Remove temporary files
+        os.remove(dot_file)
+        os.remove("temp_graph.pdf")
+
+    def is_cyclic(self) -> bool:
+        """
+        Checks if the directed graph contains a cycle using depth-first search (DFS).
+        Returns True if the graph has a cycle, otherwise False.
+        :return: bool;
+        """
+
+        # Helper function for DFS traversal
+        def dfs_util(node_id, v, s):
+            v[node_id] = True
+            s[node_id] = True
+
+            # Recur for all neighbors
+            for neighbor_id in self.get_node_by_id(node_id).get_children():
+                if not v[neighbor_id]:
+                    if dfs_util(neighbor_id, v, s):
+                        return True
+                elif s[neighbor_id]:
+                    return True
+
+            s[node_id] = False
+            return False
+
+        # Initialize visited and recursion stack
+        visited = {node_id: False for node_id in self.get_node_ids()}
+        stack = {node_id: False for node_id in self.get_node_ids()}
+
+        # Perform DFS for each node in the graph
+        for node_id in self.get_node_ids():
+            if not visited[node_id]:
+                if dfs_util(node_id, visited, stack):
+                    return True
+
+        return False
+
+    def min_id(self) -> int:
+        """
+        Returns the minimum index of the graph nodes
+        :return: int; minimum index
+        """
+        min_index = float('inf')
+        for node in self.get_nodes():
+            if node.id < min_index:
+                min_index = node.id
+        return min_index
+
+    def max_id(self) -> int:
+        """
+        Returns the maximum index of the graph nodes
+        :return: int; maximum index
+        """
+        max_index = float('-inf')
+        for node in self.get_nodes():
+            if node.id > max_index:
+                max_index = node.id
+        return max_index
+
+    def shift_indices(self, n: int) -> None:
+        """
+        Shifts all indices in the graph by adding integer n (possibly negative)
+        :param n: int; integer to be added to all indices
+        """
+        # Input list
+        new_input = []
+        for i in self.get_input_ids():
+            new_input.append(i + n)
+        self.inputs = new_input
+
+        # Output list
+        new_output = []
+        for i in self.get_output_ids():
+            new_output.append(i + n)
+        self.outputs = new_output
+
+        # ID, parents and children list for each node
+        for node in self.get_nodes():
+            node.id += n
+
+            # Parents
+            new_parents = {}
+            for i in node.get_parents():
+                new_parents[i + n] = node.parents[i]
+            node.parents = new_parents
+
+            # Children
+            new_children = {}
+            for i in node.get_children():
+                new_children[i + n] = node.children[i]
+            node.children = new_children
+
+
+class BoolCirc(OpenDigraph):
+
+    # Constructors
+    def __init__(self, g=None, test=False) -> None:
+        """
+        Constructs a new BoolCirc object
+        :param g: OpenDigraph; the associated open graph
+        :param test: bool; True if we are testing the constructor (prevent the ValueError)
+        """
+        super().__init__()  # Initialize the superclass
+        self.g = g
+        if not test:
+            if not(self.is_well_formed()):
+                raise ValueError("BoolCirc isn't well-formed")
+
+    # Methods
+    def is_well_formed(self):
+        """
+        Checks if a BoolCirc is well-formed or not
+        :return: bool: True if it is well-formed, otherwise False
+        """
+        # Check each node validity
+        for node in self.g.get_nodes():
+            if node.get_label() == '':
+                if node.indegree() != 1:
+                    return False
+            elif not(node.get_label() == '~' or node.get_label() == '|' or
+                     node.get_label() == '&'):
+                return False  # Unknown type of node
+
+        # Check if the graph is well-formed and acyclic
+        return self.g.is_well_formed() and not(self.g.is_cyclic())
+
 
 def random_int_list(n: int, bound: int, unique=False) -> List[int]:
     """
