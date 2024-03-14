@@ -8,16 +8,22 @@
         - open_digraph.cpython-310.pyc  
     - open_digraph.py  
 - tests  
+    - example_graph.dot
     - open_digraph_test.py  
+    - sample_graph.dot
+    - test_graph.dot
 - docs  
     - .DS_Store
+    - CourseNewECR.pdf
+    - ReadMe.pdf
+    - Session3.pdf
+    - Session6.pdf
     - session1_ecr.pdf
     - session2_ecr.pdf  
     - session3_ecr.pdf
     - session4_ecr.pdf
     - session5_ecr.pdf
     - session6_ecr.pdf
-    - CourseNewECR.pdf
 
 
 ## Description
