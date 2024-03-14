@@ -16,6 +16,7 @@
     - session3_ecr.pdf
     - session4_ecr.pdf
     - session5_ecr.pdf
+    - session6_ecr.pdf
     - CourseNewECR.pdf
 
 
@@ -33,7 +34,7 @@ Add a 'x' in the brackets when the week is done:
 - [x] Week 3
 - [x] Week 4
 - [x] Week 5
-- [ ] Week 6
+- [x] Week 6
 - [ ] Week 7
 - [ ] Week 8
 - [ ] Week 9
