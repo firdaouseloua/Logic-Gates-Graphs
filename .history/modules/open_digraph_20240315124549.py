@@ -1118,8 +1118,6 @@ class OpenDigraph:  # for open directed graph
         while v != u :
             v = prev[v]
             nodes.insert(0, v)
-            
-        return nodes
         
         
 

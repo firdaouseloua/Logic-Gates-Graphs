@@ -1114,13 +1114,6 @@ class OpenDigraph:  # for open directed graph
 
     def shortest_path(self, u, v):
         dist, prev = self.Dijikstra(u, None, v)
-        nodes = [v]
-        while v != u :
-            v = prev[v]
-            nodes.insert(0, v)
-            
-        return nodes
-        
         
 
 
