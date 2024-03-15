@@ -1077,9 +1077,6 @@ class OpenDigraph:  # for open directed graph
                 
                 neighbors = self.get_node_by_id(u).get_children()
                 parents = self.get_node_by_id(u).get_parents()
-                
-                for p in parents:
-                    neighbors[p] = parents[p]
                     
                 
             elif direction == -1:

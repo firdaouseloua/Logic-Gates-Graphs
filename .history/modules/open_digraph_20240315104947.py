@@ -1050,7 +1050,7 @@ class OpenDigraph:  # for open directed graph
         return cpt, dic, res
 
     
-    def Dijikstra(self, src : int, direction = None, tgt = None) -> Dict[int, int] :
+    def Dijikstra(self, src : int, direction= None) -> Dict[int, List[int]]:
         """
         Implements Dijikstra algorithm for the graph,
         Returns a dictionnarry, which for each node, calculates the total distance to the source
@@ -1060,59 +1060,35 @@ class OpenDigraph:  # for open directed graph
                                 if it is -1 only the parents
                                 and 1 only the children
         """
-        Q = [src]
         dist = {src:0}
         prev = {}
         #store the nodes we can go trough, depending on direction
+        Depart = self.get_node_by_id(src)        
+        if direction == None:
+            nodes = Depart.get_children()
+            nodes.append(Depart.get_parents())
+        elif direction == -1:
+            nodes = Depart.get_children()
+        elif direction == 1:
+            nodes = Depart.get_parents()
+        else:
+            raise ValueError("Direction can only be 1 -1 or None")
+            
+        nodes = [node[0] for node in nodes]
         
-        
-        
-        
+        for node in nodes:
+            dist[node] = None
+            prev[node] = None # at first the distance and last node is not defined
         
         #now we launch dijikstra algorithm
-        while len(Q) > 0:
-            u = min_distance(dist, Q)
-        
-            if direction == None:
-                
-                neighbors = self.get_node_by_id(u).get_children()
-                parents = self.get_node_by_id(u).get_parents()
-                
-                for p in parents:
-                    neighbors[p] = parents[p]
-                    
-                
-            elif direction == -1:
-                
-                neighbors = self.get_node_by_id(u).get_parents()
-           
-            elif direction == 1:
-                
-                neighbors = self.get_node_by_id(u).get_children()
-            else:
-                
-                raise ValueError("Direction should be None, -1, or 1")
-           
-             
+        while len(nodes) > 0:
+            min_node = min_distance(dist)
             
         
-            for v in neighbors :
-                if not(v in dist):
-                    Q.append(v)
-                if not(v in dist) or (dist[v] > dist[u] + 1):
-                    dist[v] = dist[u] + 1
-                    prev[v] = u
-                
-            if u == tgt:
-                return dist, prev
-            
-    
         
             
         
         return dist, prev
-
-        
 
 
 class BoolCirc(OpenDigraph):
@@ -1234,20 +1210,14 @@ def graph_from_adjacency_matrix(matrix: List[List[int]]) -> OpenDigraph:
 
     return OpenDigraph([], [], nodes)
 
-def min_distance(dictio, nodes):
-    """
-    Returns the node whose distance is the smallest
-    If the node is nodes
-    
-    """
+def min_distance(dictio):
     mini = None
     for node in dictio:
-        if node in nodes:
-            if mini == None:
+        if mini == None:
+            mini = node
+        else:
+            if dictio[node] < dictio[mini]:
                 mini = node
-            else:
-                if dictio[node] < dictio[mini]:
-                    mini = node
     return mini
                 
     

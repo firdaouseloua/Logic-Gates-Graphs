@@ -693,7 +693,7 @@ class InitTest(unittest.TestCase):
         self.assertEqual(f, f_bis)
         self.assertEqual(f1, f1_bis)
         self.assertEqual(f2, f3)
-        
+        f3.save_as_dot_file("example_graph.dot", verbose=True)
         with self.assertRaises(ValueError):
             f4.compose(f1, f5)
 

@@ -1,7 +1,7 @@
 import unittest
 import sys
 import os
-root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+root = os.path.normpath(os.path.join(os.path.dirname("/"+__file__)))
 sys.path.append(root)  # allows us to fetch files from the project root
 from modules.open_digraph import *
 
@@ -693,7 +693,6 @@ class InitTest(unittest.TestCase):
         self.assertEqual(f, f_bis)
         self.assertEqual(f1, f1_bis)
         self.assertEqual(f2, f3)
-        
         with self.assertRaises(ValueError):
             f4.compose(f1, f5)
 

@@ -1076,11 +1076,7 @@ class OpenDigraph:  # for open directed graph
             if direction == None:
                 
                 neighbors = self.get_node_by_id(u).get_children()
-                parents = self.get_node_by_id(u).get_parents()
-                
-                for p in parents:
-                    neighbors[p] = parents[p]
-                    
+                neighbors.append(self.get_node_by_id(u).get_parents())
                 
             elif direction == -1:
                 
@@ -1092,7 +1088,7 @@ class OpenDigraph:  # for open directed graph
             else:
                 
                 raise ValueError("Direction should be None, -1, or 1")
-           
+            neighbors = [n[0] for n in neighbors] # we only keep the id of the node, no need for multiplicity
              
             
         

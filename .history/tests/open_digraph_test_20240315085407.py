@@ -693,7 +693,6 @@ class InitTest(unittest.TestCase):
         self.assertEqual(f, f_bis)
         self.assertEqual(f1, f1_bis)
         self.assertEqual(f2, f3)
-        
         with self.assertRaises(ValueError):
             f4.compose(f1, f5)
 
@@ -712,7 +711,7 @@ class InitTest(unittest.TestCase):
             self.assertEqual(node.get_parents(), {node_id: 1})
             self.assertEqual(node.get_children(), {node_id: 1})
 
-    '''
+    
     def test_connected_components_OpenDigraph(self):
         n0 = Node(0, '&', {}, {})
         n1 = Node(1, '&', {}, {})
@@ -727,7 +726,7 @@ class InitTest(unittest.TestCase):
         f4.parallel(f, f1)
         self.assertEqual(f3.connected_components(), (3, {0: 0, 1: 1, 2: 2, 3: 0}))
         self.assertEqual(f4.connected_components(), (3, {0: 0, 1: 1, 2: 2, 3: 0}))
-    '''
+    
 
 
 # Creating a simple example graph

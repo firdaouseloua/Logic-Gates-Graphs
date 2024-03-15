@@ -693,7 +693,6 @@ class InitTest(unittest.TestCase):
         self.assertEqual(f, f_bis)
         self.assertEqual(f1, f1_bis)
         self.assertEqual(f2, f3)
-        
         with self.assertRaises(ValueError):
             f4.compose(f1, f5)
 
