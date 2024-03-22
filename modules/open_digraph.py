@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Set, Union
 from random import randint, sample
 import os
 import sys
@@ -1059,6 +1059,9 @@ class OpenDigraph:  # for open directed graph
         :param direction : an int, if it is None we go trough parents and children
                                 if it is -1 only the parents
                                 and 1 only the children
+        :param tgt: an int, the id of the target node to stop early if found
+        :return: Dict[int, int]; a dictionary mapping each node id to its distance from the source
+             and the previous node id in the shortest path
         """
         Q = [src]
         dist = {src:0}
@@ -1072,7 +1075,7 @@ class OpenDigraph:  # for open directed graph
         #now we launch dijikstra algorithm
         while len(Q) > 0:
             u = min_distance(dist, Q)
-        
+            
             if direction == None:
                 
                 neighbors = self.get_node_by_id(u).get_children()
@@ -1121,9 +1124,157 @@ class OpenDigraph:  # for open directed graph
             
         return nodes
         
-        
+    def common_ancestors_distances(self, node1_id: int, node2_id: int) -> Dict[int, Tuple[int, int]]:
+        """
+        Returns a dictionary associating each common ancestor of the two nodes with its distance from each of the two nodes.
+        :param node1_id: int; ID of the first node
+        :param node2_id: int; ID of the second node
+        :return: Dict[int, Tuple[int, int]]; dictionary with common ancestor IDs as keys and distances from both nodes as values
+        """
+        # Perform Dijkstra's algorithm from both nodes
+        dist1, prev1 = self.Dijkstra(node1_id)
+        dist2, prev2 = self.Dijkstra(node2_id)
 
+        # Find common ancestors
+        common_ancestors = set(prev1.keys()) & set(prev2.keys())
 
+        # Calculate distances from both nodes to common ancestors
+        common_ancestors_distances = {}
+        for ancestor in common_ancestors:
+            distance_from_node1 = dist1[ancestor]
+            distance_from_node2 = dist2[ancestor]
+            common_ancestors_distances[ancestor] = (distance_from_node1, distance_from_node2)
+
+        return common_ancestors_distances
+    
+    def topological_sort(self) -> Union[List[Set[int]], str]:
+        """
+        Performs a topological sort on the graph and returns a sequence of sets representing the sort.
+        If the graph is cyclic, returns an error message.
+        :return: Union[List[Set[int]], str]; sequence of sets or error message
+        """
+        # Initialize result list
+        topological_sequence = []
+
+        # Initialize set of nodes with no parents (co-leaves)
+        co_leaves = set(self.get_input_ids())
+
+        # Perform topological sort
+        while co_leaves:
+            current_set = set()
+
+            # Find co-leaves
+            new_co_leaves = set()
+            for node_id in co_leaves:
+                current_set.add(node_id)
+                for child_id in self.get_node_by_id(node_id).get_children():
+                    if all(parent_id not in current_set for parent_id in self.get_node_by_id(child_id).get_parents()):
+                        new_co_leaves.add(child_id)
+
+            # If there are no new co-leaves but the graph is non-empty, it's cyclic
+            if not new_co_leaves and len(current_set) < len(self.get_node_ids()):
+                return "Error: Graph is cyclic"
+
+            # Add current set to the topological sequence
+            topological_sequence.append(current_set)
+
+            co_leaves = new_co_leaves
+
+        return topological_sequence
+    
+    def graph_depth(self) -> int:
+        """
+        Calculates the depth of the graph, which is the number of sets in the topological sort.
+        :return: int; depth of the graph
+        """
+        topological_sequence = self.topological_sort()
+        if isinstance(topological_sequence, str):
+            return 0  # Graph is cyclic, depth is 0
+        else:
+            return len(topological_sequence)
+
+    def node_depth(self, node_id: int, topological_sort: List[Set[int]]) -> int:
+        """
+        Returns the depth of a given node in the graph based on the provided topological sort.
+        """
+        for i, node_set in enumerate(topological_sort):
+            if node_id in node_set:
+                return i
+        raise ValueError(f"Node {node_id} not found in the provided topological sort.")
+
+    def longest_path(self, u: int, v: int, topological_sort: List[Set[int]]) -> Tuple[int, List[int]]:
+        """
+        Calculates the longest path from node u to node v in the graph using topological sorting.
+        """
+        # Initialize distances and previous nodes
+        dist = {node_id: -float('inf') for node_set in topological_sort for node_id in node_set}
+        prev = {node_id: None for node_set in topological_sort for node_id in node_set}
+
+        # Initialize distance of source node u to 0
+        dist[u] = 0
+
+        # Iterate through topological sort
+        for node_set in topological_sort:
+            for node_id in node_set:
+                if node_id == v:
+                    return dist[v], self.reconstruct_path(prev, u, v)
+                for parent_id in self.nodes[node_id].get_parents():
+                    if dist[parent_id] + 1 > dist[node_id]:
+                        dist[node_id] = dist[parent_id] + 1
+                        prev[node_id] = parent_id
+
+    def reconstruct_path(self, prev: dict, u: int, v: int) -> List[int]:
+        """
+        Reconstructs the longest path from node u to node v based on the previous nodes.
+        """
+        path = []
+        current = v
+        while current is not None:
+            path.insert(0, current)
+            current = prev[current]
+        return path
+    def max_path_and_distance(self, u: int, v: int) -> Tuple[List[int], int]:
+        """
+        Calculates the maximum path and distance from node u to node v in the graph.
+        """
+        # Initialize distances and previous nodes
+        dist = {node_id: -float('inf') for node_id in self.nodes}
+        prev = {node_id: None for node_id in self.nodes}
+
+        # Initialize distance of source node u to 0
+        dist[u] = 0
+
+        # Initialize maximum distance encountered and the node that leads to that distance
+        max_distance = -float('inf')
+        max_distance_node = None
+
+        # Iterate through the graph using modified Dijkstra's algorithm
+        for _ in range(len(self.nodes)):
+            u = max(dist, key=dist.get)  # Node with maximum distance
+            if u == v:
+                break  # Reached target node v
+            if dist[u] == -float('inf'):
+                break  # Unreachable nodes remaining
+
+            for v in self.nodes[u].get_children():
+                if dist[u] + 1 > dist[v]:
+                    dist[v] = dist[u] + 1
+                    prev[v] = u
+                    if dist[v] > max_distance:
+                        max_distance = dist[v]
+                        max_distance_node = v
+
+            del dist[u]  # Remove processed node from distances
+
+        # Reconstruct the maximum path
+        path = []
+        current = v
+        while current is not None:
+            path.insert(0, current)
+            current = prev[current]
+
+        return path, max_distance
+    
 class BoolCirc(OpenDigraph):
     # Constructors
     def __init__(self, g=None, test=False) -> None:
