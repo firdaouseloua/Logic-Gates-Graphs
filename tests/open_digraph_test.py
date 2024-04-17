@@ -712,6 +712,19 @@ class InitTest(unittest.TestCase):
             self.assertEqual(node.get_parents(), {node_id: 1})
             self.assertEqual(node.get_children(), {node_id: 1})
 
+    def test_dijkstra_OpenDigraph(self):
+        n0 = Node(0, '&', {}, {})
+        n1 = Node(1, '&', {}, {})
+        n2 = Node(2, '|', {}, {})
+        g = OpenDigraph([], [], [n0, n1, n2])
+        g.add_edge(0, 1)
+        g.add_edge(1, 2)
+        g.add_edge(0, 2)
+
+        dist, prev = g.dijkstra(0)
+        self.assertEqual(dist, {0: 0, 1: 1, 2: 1})
+        self.assertEqual(prev, {1: 0, 2: 0})
+
     '''
     def test_connected_components_OpenDigraph(self):
         n0 = Node(0, '&', {}, {})

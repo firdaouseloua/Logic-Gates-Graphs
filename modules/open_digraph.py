@@ -174,10 +174,6 @@ class Node:
         return self.indegree() + self.outdegree()
         # return self.indegree() - self.outdegree()
 
-        
-        
-        
-
 
 class OpenDigraph:  # for open directed graph
 
@@ -1049,91 +1045,89 @@ class OpenDigraph:  # for open directed graph
 
         return cpt, dic, res
 
-    
-    def Dijikstra(self, src : int, direction = None, tgt = None) -> Dict[int, int] :
+    @staticmethod
+    def min_distance(dist, q):
+        min_dist = float('inf')
+        min_node = None
+        for node in q:
+            if dist[node] < min_dist:
+                min_dist = dist[node]
+                min_node = node
+        return min_node
+
+    def dijkstra(self, src: int, direction=None, tgt=None) -> Tuple[Dict[int, int], Dict[int, int]]:
         """
-        Implements Dijikstra algorithm for the graph,
-        Returns a dictionnarry, which for each node, calculates the total distance to the source
-        and the previous node to go from src to the node 
-        :param src : an int, the id of the source node
-        :param direction : an int, if it is None we go trough parents and children
-                                if it is -1 only the parents
-                                and 1 only the children
-        :param tgt: an int, the id of the target node to stop early if found
-        :return: Dict[int, int]; a dictionary mapping each node id to its distance from the source
-             and the previous node id in the shortest path
+        Implements Dijkstra algorithm for the graph,
+        Returns a dictionary, which for each node, calculates the total distance to the source
+        and one giving the previous nodes to go from src to the node
+        :param src: int; the id of the source node
+        :param direction: int; if None, go through parents and children
+                               if -1 only the parents
+                               if 1 only the children
+        :param tgt: int; the id of the target node to stop early if found
+        :return: Tuple[Dict[int, int], Dict[int, int]];
+                 the dictionary mapping each node id to its distance from the source
+                 and the one giving the previous node ids in the shortest path
         """
-        Q = [src]
-        dist = {src:0}
+        # Stocke les noeuds que nous pouvons parcourir, en fonction de la direction
+        q = [src]
+        dist = {src: 0}
         prev = {}
-        #store the nodes we can go trough, depending on direction
-        
-        
-        
-        
-        
-        #now we launch dijikstra algorithm
-        while len(Q) > 0:
-            u = min_distance(dist, Q)
-            
-            if direction == None:
-                
-                neighbors = self.get_node_by_id(u).get_children()
-                parents = self.get_node_by_id(u).get_parents()
-                
-                for p in parents:
-                    neighbors[p] = parents[p]
-                    
-                
-            elif direction == -1:
-                
-                neighbors = self.get_node_by_id(u).get_parents()
-           
-            elif direction == 1:
-                
-                neighbors = self.get_node_by_id(u).get_children()
-            else:
-                
-                raise ValueError("Direction should be None, -1, or 1")
-           
-             
-            
-        
-            for v in neighbors :
-                if not(v in dist):
-                    Q.append(v)
-                if not(v in dist) or (dist[v] > dist[u] + 1):
-                    dist[v] = dist[u] + 1
-                    prev[v] = u
-                
+
+        # Algorithme de Dijkstra
+        while len(q) > 0:
+            u = self.min_distance(dist, q)
+
             if u == tgt:
                 return dist, prev
-            
-    
-        
-            
-        
+
+            if direction is None:
+                neighbors = self.get_node_by_id(u).get_children()
+                parents = self.get_node_by_id(u).get_parents()
+                for p in parents:
+                    neighbors[p] = parents[p]
+
+            elif direction == -1:
+                neighbors = self.get_node_by_id(u).get_parents()
+
+            elif direction == 1:
+                neighbors = self.get_node_by_id(u).get_children()
+
+            else:
+                raise ValueError("La direction doit être None, -1 ou 1")
+
+            for v in neighbors:
+                if v not in dist:
+                    q.append(v)
+                    dist[v] = float('inf')
+                if dist[v] > dist[u] + 1:  # Ne tient pas compte du poids des arêtes
+                    dist[v] = dist[u] + 1
+                    prev[v] = u
+
+            q.remove(u)
+
         return dist, prev
 
     def shortest_path(self, u, v):
-        dist, prev = self.Dijikstra(u, None, v)
+        dist, prev = self.dijkstra(u, None, v)
         nodes = [v]
-        while v != u :
+        while v != u:
             v = prev[v]
             nodes.insert(0, v)
-            
         return nodes
         
     def common_ancestors_distances(self, node1_id: int, node2_id: int) -> Dict[int, Tuple[int, int]]:
         """
-        Returns a dictionary associating each common ancestor of the two nodes with its distance from each of the two nodes.
+        Returns a dictionary associating each common ancestor of the two nodes with its distance
+        from each of the two nodes.
         :param node1_id: int; ID of the first node
         :param node2_id: int; ID of the second node
-        :return: Dict[int, Tuple[int, int]]; dictionary with common ancestor IDs as keys and distances from both nodes as values
+        :return: Dict[int, Tuple[int, int]]; dictionary with common ancestor IDs
+                                             as keys and distances from both nodes as values
         """
         # Perform Dijkstra's algorithm from both nodes
-        dist1, prev1 = self.Dijkstra(node1_id)
-        dist2, prev2 = self.Dijkstra(node2_id)
+        dist1, prev1 = self.dijkstra(node1_id)
+        dist2, prev2 = self.dijkstra(node2_id)
 
         # Find common ancestors
         common_ancestors = set(prev1.keys()) & set(prev2.keys())
@@ -1151,7 +1145,7 @@ class OpenDigraph:  # for open directed graph
         """
         Performs a topological sort on the graph and returns a sequence of sets representing the sort.
         If the graph is cyclic, returns an error message.
-        :return: Union[List[Set[int]], str]; sequence of sets or error message
+        :return: Union[List[Set[int]], str]; sequence of sets
         """
         # Initialize result list
         topological_sequence = []
@@ -1171,13 +1165,12 @@ class OpenDigraph:  # for open directed graph
                     if all(parent_id not in current_set for parent_id in self.get_node_by_id(child_id).get_parents()):
                         new_co_leaves.add(child_id)
 
-            # If there are no new co-leaves but the graph is non-empty, it's cyclic
+            # If there are no new co-leaves but the graph is not empty, it's cyclic
             if not new_co_leaves and len(current_set) < len(self.get_node_ids()):
-                return "Error: Graph is cyclic"
+                raise ValueError("Graph is cyclic")
 
             # Add current set to the topological sequence
             topological_sequence.append(current_set)
-
             co_leaves = new_co_leaves
 
         return topological_sequence
@@ -1193,9 +1186,13 @@ class OpenDigraph:  # for open directed graph
         else:
             return len(topological_sequence)
 
-    def node_depth(self, node_id: int, topological_sort: List[Set[int]]) -> int:
+    @staticmethod
+    def node_depth(node_id: int, topological_sort: List[Set[int]]) -> int:
         """
         Returns the depth of a given node in the graph based on the provided topological sort.
+        :param node_id: int; id of the node
+        :param topological_sort: List[Set[int]]; result of the topological sort
+        :return: int; the depth of the node
         """
         for i, node_set in enumerate(topological_sort):
             if node_id in node_set:
@@ -1205,6 +1202,10 @@ class OpenDigraph:  # for open directed graph
     def longest_path(self, u: int, v: int, topological_sort: List[Set[int]]) -> Tuple[int, List[int]]:
         """
         Calculates the longest path from node u to node v in the graph using topological sorting.
+        :param u: int; source node
+        :param v: int; target node
+        :param topological_sort: List[Set[int]]; result of the topological sort
+        :return: Tuple[int, List[int]]; distance of the longest path and longest path itself
         """
         # Initialize distances and previous nodes
         dist = {node_id: -float('inf') for node_set in topological_sort for node_id in node_set}
@@ -1217,15 +1218,19 @@ class OpenDigraph:  # for open directed graph
         for node_set in topological_sort:
             for node_id in node_set:
                 if node_id == v:
-                    return dist[v], self.reconstruct_path(prev, u, v)
+                    return dist[v], self.reconstruct_path(prev, v)
                 for parent_id in self.nodes[node_id].get_parents():
                     if dist[parent_id] + 1 > dist[node_id]:
                         dist[node_id] = dist[parent_id] + 1
                         prev[node_id] = parent_id
 
-    def reconstruct_path(self, prev: dict, u: int, v: int) -> List[int]:
+    @staticmethod
+    def reconstruct_path(prev: dict, v: int) -> List[int]:
         """
         Reconstructs the longest path from node u to node v based on the previous nodes.
+        :param prev: dict; dict of the previous nodes
+        :param v: int; current target node
+        :return; List[int]; the path needed
         """
         path = []
         current = v
@@ -1233,9 +1238,13 @@ class OpenDigraph:  # for open directed graph
             path.insert(0, current)
             current = prev[current]
         return path
+
     def max_path_and_distance(self, u: int, v: int) -> Tuple[List[int], int]:
         """
         Calculates the maximum path and distance from node u to node v in the graph.
+        :param u: int; source node
+        :param v: int; target node
+        :return: Tuple[List[int], int]; maximum path and distance
         """
         # Initialize distances and previous nodes
         dist = {node_id: -float('inf') for node_id in self.nodes}
@@ -1246,9 +1255,8 @@ class OpenDigraph:  # for open directed graph
 
         # Initialize maximum distance encountered and the node that leads to that distance
         max_distance = -float('inf')
-        max_distance_node = None
 
-        # Iterate through the graph using modified Dijkstra's algorithm
+        # Iterate through the graph using Dijkstra's algorithm
         for _ in range(len(self.nodes)):
             u = max(dist, key=dist.get)  # Node with maximum distance
             if u == v:
@@ -1262,7 +1270,6 @@ class OpenDigraph:  # for open directed graph
                     prev[v] = u
                     if dist[v] > max_distance:
                         max_distance = dist[v]
-                        max_distance_node = v
 
             del dist[u]  # Remove processed node from distances
 
@@ -1274,7 +1281,8 @@ class OpenDigraph:  # for open directed graph
             current = prev[current]
 
         return path, max_distance
-    
+
+
 class BoolCirc(OpenDigraph):
     # Constructors
     def __init__(self, g=None, test=False) -> None:
@@ -1394,23 +1402,20 @@ def graph_from_adjacency_matrix(matrix: List[List[int]]) -> OpenDigraph:
 
     return OpenDigraph([], [], nodes)
 
-def min_distance(dictio, nodes):
+
+def min_distance(dic: Dict[int, int], nodes: List[int]) -> int:
     """
     Returns the node whose distance is the smallest
-    If the node is nodes
-    
+    :param dic: Dict[int, int];
+    :param nodes: List[int];
+    :return: int; node with the smallest distance
     """
     mini = None
-    for node in dictio:
+    for node in dic:
         if node in nodes:
-            if mini == None:
+            if mini is None:
                 mini = node
             else:
-                if dictio[node] < dictio[mini]:
+                if dic[node] < dic[mini]:
                     mini = node
     return mini
-                
-    
-
-
-
