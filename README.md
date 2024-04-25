@@ -12,10 +12,14 @@
     - open_digraph_test.py  
     - sample_graph.dot
     - test_graph.dot
+    - test1.py
 - docs  
     - .DS_Store
     - CourseNewECR.pdf
     - ReadMe.pdf
+    - TD10.pdf
+    - TD11.pdf
+    - TD12.pdf
     - Session3.pdf
     - Session6.pdf
     - session1_ecr.pdf
@@ -24,6 +28,9 @@
     - session4_ecr.pdf
     - session5_ecr.pdf
     - session6_ecr.pdf
+    - session7_ecr.pdf
+    - session8_ecr.pdf
+    - session9_ecr.pdf
 
 
 ## Description
@@ -41,8 +48,8 @@ Add a 'x' in the brackets when the week is done:
 - [x] Week 4
 - [x] Week 5
 - [x] Week 6
-- [ ] Week 7
-- [ ] Week 8
+- [x] Week 7
+- [x] Week 8
 - [ ] Week 9
 - [ ] Week 10
 - [ ] Week 11
