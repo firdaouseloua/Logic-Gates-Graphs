@@ -795,7 +795,7 @@ class OpenDigraph:  # for open directed graph
         Returns the maximum index of the graph nodes
         :return: int; maximum index
         """
-        max_index = float('-inf')
+        max_index = 0
         for node in self.get_nodes():
             if node.id > max_index:
                 max_index = node.id
@@ -1282,10 +1282,43 @@ class OpenDigraph:  # for open directed graph
 
         return path, max_distance
 
+    def merge_nodes(self, node_id1: int, node_id2: int, label: str = None) -> int:
+        """
+        Merges two nodes in the graph by combining their attributes and edges.
+        :param node_id1: int; ID of the first node to merge
+        :param node_id2: int; ID of the second node to merge
+        :param label: str; optional label for the merged node
+        :return: int; ID of the merged node
+        """
+        # Ensure that both nodes exist in the graph
+        nodes = self.nodes
+        if node_id1 not in nodes or node_id2 not in nodes:
+            raise ValueError("Node IDs must be valid nodes in the graph")
+
+        # Choose the label for the merged node
+        if label is None:
+            self.nodes[node_id1].label = self.nodes[node_id1].label
+        else:
+            self.nodes[node_id1].label = label
+
+        # Transfer edges from node2 to node1
+        for child_id in self.nodes[node_id2].children:
+            self.nodes[node_id1].add_child_id(child_id)
+            self.nodes[child_id].add_parent_id(node_id1)
+
+        for parent_id in self.nodes[node_id2].parents:
+            self.nodes[node_id1].add_parent_id(parent_id)
+            self.nodes[parent_id].add_child_id(node_id1)
+
+        # Remove node2 from the graph
+        del self.nodes[node_id2]
+
+        return node_id1
+
 
 class BoolCirc(OpenDigraph):
     # Constructors
-    def __init__(self, g=None, test=False) -> None:
+    def __init__(self, g=OpenDigraph(), test=False) -> None:
         """
         Constructs a new BoolCirc object
         :param g: OpenDigraph; the associated open graph
@@ -1314,6 +1347,129 @@ class BoolCirc(OpenDigraph):
 
         # Check if the graph is well-formed and acyclic
         return self.g.is_well_formed() and not(self.g.is_cyclic())
+
+    '''
+    def parse_parentheses(self, s: str) -> None:
+        """
+        Ex 1)
+        Parses a propositional formula in completely parenthesized form and constructs a boolean circuit tree.
+        :param s: str; the propositional formula in infix notation
+        """
+        current_node_id = self.max_id() + 1  # Start with a new node ID
+
+        s2 = ''
+        for char in s:
+            if char == '(':
+                # Add s2 to the label of the current node
+                self.get_node_by_id(current_node_id).label += s2
+
+                # Create a parent of current_node and make it current_node
+                parent_node_id = self.max_id() + 1
+                self.nodes[parent_node_id] = Node(identity=parent_node_id, label='', parents={}, children={})
+                self.get_node_by_id(parent_node_id).add_child_id(current_node_id)
+                self.get_node_by_id(current_node_id).add_parent_id(parent_node_id)
+                current_node_id = parent_node_id
+                s2 = ''
+
+            elif char == ')':
+                # Add s2 to the label of current_node
+                self.get_node_by_id(current_node_id).label += s2
+
+                # Change current_node so that it becomes its child
+                current_node_id = self.get_node_by_id(current_node_id).get_parents().popitem()[0]
+                s2 = ''
+
+            else:
+                # Add char to the end of s2
+                s2 += char
+
+        # Add the remaining characters in s2 to the label of the current node
+        self.get_node_by_id(current_node_id).label += s2
+    '''
+
+    def parse_parentheses(self, s: str) -> Tuple['BoolCirc', List[str]]:
+        """
+        Ex 3)
+        Parses a propositional formula, merges nodes, and constructs a boolean circuit tree.
+        :param s: str; the propositional formula in infix notation
+        :return: Tuple[BoolCirc, List[str]]; the boolean circuit and list of variable names
+        """
+        current_node_id = self.max_id() + 1  # Start with a new node ID
+        parent_node_id = self.max_id() + 2
+        s2 = ''
+        variables = []
+
+        for char in s:
+            if char == '(':
+                # Add s2 to the label of the current node
+                self.nodes[current_node_id].label += s2
+
+                # Create a parent of current_node and make it current_node
+                parent_node_id = self.max_id() + 1
+                self.nodes[parent_node_id] = Node(identity=parent_node_id, label='', parents={}, children={})
+                self.nodes[parent_node_id].add_child_id(current_node_id)
+                self.nodes[current_node_id].add_parent_id(parent_node_id)
+                current_node_id = parent_node_id
+                s2 = ''
+
+            elif char == ')':
+                # Add s2 to the label of current_node
+                self.nodes[current_node_id].label += s2
+
+                # Change current_node so that it becomes its child
+                current_node_id = list(self.nodes[current_node_id].parents)[0]
+                s2 = ''
+
+            elif char.isalpha():
+                # Add char to variables if it's not already there
+                if char not in variables:
+                    variables.append(char)
+
+                # Add char to the end of s2
+                s2 += char
+
+            elif char == ' ':
+                # Merge nodes if s2 represents a variable
+                if s2.isalpha():
+                    self.merge_nodes(parent_node_id, current_node_id)
+                    current_node_id = list(self.nodes[parent_node_id].parents)[0]
+                    s2 = ''
+                else:
+                    s2 += char
+
+        # Add the remaining characters in s2 to the label of the current node
+        self.nodes[current_node_id].label += s2
+
+        return self, variables
+
+    @staticmethod
+    def parse_parentheses_multiple(*args: str) -> 'BoolCirc':
+        """
+        Ex 4)
+        Parses multiple propositional formulas and constructs a single boolean circuit that implements the sequence.
+        :param args: str; sequence of propositional formulas
+        :return: BoolCirc; the boolean circuit implementing the sequence
+        """
+        circuits = []  # List to store individual circuits for each formula
+        merged_circuit = BoolCirc()  # Initialize the merged circuit
+
+        for formula in args:
+            # Parse each formula and obtain the boolean circuit
+            circuit, _ = merged_circuit.parse_parentheses(formula)
+            circuits.append(circuit)
+
+        # Combine circuits side by side
+        for circuit in circuits:
+            # Connect the outputs of the current circuit to the inputs of the merged circuit
+            output_id = list(circuit.nodes.keys())[-1]  # Get the output node ID of the current circuit
+            input_id = merged_circuit.max_id() + 1  # Get the next available ID in the merged circuit
+
+            # Add the output node of the current circuit as a child of the input node of the merged circuit
+            merged_circuit.nodes[input_id] = Node(identity=input_id, label='', parents={}, children={})
+            merged_circuit.nodes[input_id].add_child_id(output_id)
+            merged_circuit.nodes[output_id].add_parent_id(input_id)
+
+        return merged_circuit
 
 
 def random_int_list(n: int, bound: int, unique=False) -> List[int]:
