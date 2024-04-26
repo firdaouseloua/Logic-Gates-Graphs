@@ -1,5 +1,5 @@
 from typing import List, Dict, Tuple, Set, Union
-from random import randint, sample
+from random import randint, sample, choice
 import os
 import sys
 root = os.path.normpath(os.path.join(os.path.dirname(__file__)))
@@ -784,7 +784,7 @@ class OpenDigraph:  # for open directed graph
         Returns the minimum index of the graph nodes
         :return: int; minimum index
         """
-        min_index = float('inf')
+        min_index = 0
         for node in self.get_nodes():
             if node.id < min_index:
                 min_index = node.id
@@ -1351,7 +1351,7 @@ class BoolCirc(OpenDigraph):
     '''
     def parse_parentheses(self, s: str) -> None:
         """
-        Ex 1)
+        Session 9.1)
         Parses a propositional formula in completely parenthesized form and constructs a boolean circuit tree.
         :param s: str; the propositional formula in infix notation
         """
@@ -1389,7 +1389,7 @@ class BoolCirc(OpenDigraph):
 
     def parse_parentheses(self, s: str) -> Tuple['BoolCirc', List[str]]:
         """
-        Ex 3)
+        Session 9.3)
         Parses a propositional formula, merges nodes, and constructs a boolean circuit tree.
         :param s: str; the propositional formula in infix notation
         :return: Tuple[BoolCirc, List[str]]; the boolean circuit and list of variable names
@@ -1445,7 +1445,7 @@ class BoolCirc(OpenDigraph):
     @staticmethod
     def parse_parentheses_multiple(*args: str) -> 'BoolCirc':
         """
-        Ex 4)
+        Session 9.4)
         Parses multiple propositional formulas and constructs a single boolean circuit that implements the sequence.
         :param args: str; sequence of propositional formulas
         :return: BoolCirc; the boolean circuit implementing the sequence
@@ -1471,6 +1471,67 @@ class BoolCirc(OpenDigraph):
 
         return merged_circuit
 
+    def random_bool_circ(self, unary_operators: str, binary_operators: str, inputs: int, outputs: int) -> None:
+        """
+        Creates a random bool circ with specified number of inputs and outputs
+        :param unary_operators: str; list of unary operators
+        :param binary_operators: str; list of binary operators
+        :param inputs: int; number of inputs
+        :param outputs: int; number of outputs
+        """
+        # Label the nodes based on their in-degree and out-degree
+        for node in self.g.get_node_ids():
+            indegree = self.g.get_node_by_id(node).indegree()
+            outdegree = self.g.get_node_by_id(node).outdegree()
+
+            if indegree == outdegree == 1:
+                # Assign unary operator
+                self.g.get_node_by_id(node).set_label(choice(unary_operators))
+
+            elif indegree == 1 and outdegree > 1:
+                # Do nothing, node represents a copy
+                pass
+
+            elif indegree > 1 and outdegree == 1:
+                # Assign binary operator
+                self.g.get_node_by_id(node).set_label(choice(binary_operators))
+
+            elif indegree > 1 and outdegree > 1:
+                # Split the node into two nodes
+                new_node1 = len(self.g.get_nodes())
+                new_node2 = len(self.g.get_nodes()) + 1
+                self.g.get_node_by_id(new_node1).set_label(choice(binary_operators))
+                self.g.get_node_by_id(new_node2).set_label("")
+
+                for parent in self.g.get_node_ids():
+                    self.g.get_node_by_id(parent).remove_parent_id(node)
+                    self.g.get_node_by_id(parent).add_parent_id(new_node1)
+
+                for child in self.g.get_node_ids():
+                    self.g.get_node_by_id(child).remove_child_id(node)
+                    self.g.get_node_by_id(new_node2).add_child_id(child)
+
+                self.g.get_node_by_id(new_node2).set_label("")
+
+        # Add inputs and outputs if necessary
+        node_ids = self.get_node_ids()
+        inputs_list = [i for i in node_ids if len(self.g.get_node_by_id(i).get_parents()) == 0 and
+                       len(self.g.get_node_by_id(i).get_children()) == 1]
+        if len(inputs_list) < inputs:
+            raise ValueError("This graph has too few possibilities for inputs nodes")
+        inputs_list = sample(node_ids, inputs)
+
+        outputs_list = [i for i in node_ids if len(self.g.get_node_by_id(i).get_children()) == 0 and
+                        len(self.g.get_node_by_id(i).get_parents()) == 1 and i not in inputs_list]
+        if len(outputs_list) < outputs:
+            raise ValueError("This graph has too few possibilities for outputs nodes")
+        outputs_list = sample(node_ids, outputs)
+
+        for node_id in inputs_list:
+            self.g.add_input_id(node_id)
+        for node_id in outputs_list:
+            self.g.add_output_id(node_id)
+
 
 def random_int_list(n: int, bound: int, unique=False) -> List[int]:
     """
@@ -1478,6 +1539,7 @@ def random_int_list(n: int, bound: int, unique=False) -> List[int]:
     :param n: int; numbers of integers wanted
     :param bound: int; maximum value of the integers
     :param unique: bool; set True if you want only unique integers
+    :return: List[int]; a list of random numbers
     """
     if unique and n > bound + 1:
         raise ValueError("Bound too small compared to n")
@@ -1502,6 +1564,7 @@ def random_int_matrix(n: int, bound: int, unique=False, null_diag=True, symmetri
     :param symmetric: bool; set True if you want the matrix to be symmetric
     :param oriented: bool; set True if you want the matrix to define an oriented graph
     :param dag: bool; set True if you want the matrix to define an acyclic graph
+    :return: List[List[int]]; a random matrix
     """
     if symmetric and (oriented or dag):
         raise ValueError("Matrix cannot be symmetric and oriented/acyclic")
@@ -1537,6 +1600,7 @@ def graph_from_adjacency_matrix(matrix: List[List[int]]) -> OpenDigraph:
     """
     Returns an OpenDigraph from an adjency matrix
     :param matrix: List[List[int]]; the ajdency matrix
+    :return: OpenDigraph; an OpenDigraph made from the matrix
     """
     n = len(matrix)
     nodes = []
