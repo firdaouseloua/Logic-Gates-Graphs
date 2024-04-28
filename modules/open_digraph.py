@@ -1336,17 +1336,20 @@ class BoolCirc(OpenDigraph):
         Checks if a BoolCirc is well-formed or not
         :return: bool: True if it is well-formed, otherwise False
         """
+        # List of allowed primitive operations
+        allowed_primitives = {'0', '1', '~', '|', '&', '^'}
+
         # Check each node validity
         for node in self.g.get_nodes():
-            if node.get_label() == '':
+            label = node.get_label()
+            if label == '':
                 if node.indegree() != 1:
                     return False
-            elif not(node.get_label() == '~' or node.get_label() == '|' or
-                     node.get_label() == '&'):
+            elif label not in allowed_primitives:
                 return False  # Unknown type of node
 
-        # Check if the graph is well-formed and acyclic
-        return self.g.is_well_formed() and not(self.g.is_cyclic())
+        # Check if the graph itself is well-formed and acyclic
+        return self.g.is_well_formed() and not self.g.is_cyclic()
 
     '''
     def parse_parentheses(self, s: str) -> None:
@@ -1531,6 +1534,55 @@ class BoolCirc(OpenDigraph):
             self.g.add_input_id(node_id)
         for node_id in outputs_list:
             self.g.add_output_id(node_id)
+
+    def half_adder(self, n: int) -> None:
+        """
+        Constructs a Boolean Half-Adder circuit for a register of size 2^n.
+        :param n: int; size of the register
+        """
+        if n == 0:
+            # Base case: Constructing the Half-Adder for a register of size 1
+            self.parse_parentheses("~a ~b Addern 0 :=")
+        else:
+            # Recursive construction of the Half-Adder
+            self.half_adder(n - 1)
+            self.parse_parentheses(f"Addern 0 := {n - 1} p")
+
+    def adder(self, n: int) -> None:
+        """
+        Constructs a Boolean Adder circuit for a register of size 2^n.
+        :param n: int; size of the register
+        """
+        if n == 0:
+            # Base case: Constructing the Adder for a register of size 1
+            self.parse_parentheses("~a ~b Addern 0 :=")
+        else:
+            # Recursive construction of the Adder
+            self.adder(n - 1)
+            self.parse_parentheses(f"Addern {n} 0 := {n - 1} p")
+
+    def carry_lookahead_adder_4(self) -> None:
+        """
+        Constructs a Carry-Lookahead Adder for registers of size 4.
+        :return: BoolCirc; the constructed Carry-Lookahead Adder circuit
+        """
+        self.adder(4)
+
+    def carry_lookahead_adder(self, n: int) -> None:
+        """
+        Constructs a Carry-Lookahead Adder for registers of size 4n.
+        :param n: int; size of the register 4n
+        """
+        if not n % 4 and n > 0:
+            raise ValueError("n must be a multiple of 4")
+
+        if n == 0:
+            # Base case: Constructing the Adder for a register of size 1
+            self.carry_lookahead_adder_4()
+        else:
+            # Recursive construction of the Adder
+            self.carry_lookahead_adder(n-1)
+            self.carry_lookahead_adder_4()
 
 
 def random_int_list(n: int, bound: int, unique=False) -> List[int]:
