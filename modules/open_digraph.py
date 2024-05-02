@@ -784,7 +784,7 @@ class OpenDigraph:  # for open directed graph
         Returns the minimum index of the graph nodes
         :return: int; minimum index
         """
-        min_index = 0
+        min_index = float('inf')
         for node in self.get_nodes():
             if node.id < min_index:
                 min_index = node.id
@@ -795,7 +795,7 @@ class OpenDigraph:  # for open directed graph
         Returns the maximum index of the graph nodes
         :return: int; maximum index
         """
-        max_index = 0
+        max_index = float('-inf')
         for node in self.get_nodes():
             if node.id > max_index:
                 max_index = node.id
@@ -1583,6 +1583,159 @@ class BoolCirc(OpenDigraph):
             # Recursive construction of the Adder
             self.carry_lookahead_adder(n-1)
             self.carry_lookahead_adder_4()
+
+    def int_to_register_circuit(self, number: int, register_size: int) -> None:
+        """
+        Creates a Boolean circuit representing the given integer instantiated in a register
+        :param number: int; the integer value to be represented.
+        :param register_size: int; the size of the register (number of bits). Default is 8
+        """
+        # Convert the integer to binary representation
+        binary_str = bin(number)[2:]
+
+        # Pad the binary string with leading zeros if necessary
+        padded_binary_str = binary_str.zfill(register_size)
+
+        # Create nodes for each bit of the binary representation
+        for bit in padded_binary_str:
+            self.g.add_node(bit)
+
+        # Connect the nodes in the circuit to represent the binary value
+        for i in range(register_size - 1):
+            self.g.add_edge(int(padded_binary_str[i]), int(padded_binary_str[i + 1]))
+
+    def rule_not(self) -> None:
+        """
+        Applies transformation for NOT gates: ~0 -> 1, ~1 -> 0
+        """
+        node_ids = self.g.get_node_ids()
+        for node_id in node_ids:
+            node = self.g.nodes[node_id]
+            if node.get_label() == '∼':
+                pred = node.get_parents()[0]
+                pred_label = self.g.nodes[pred].get_label()
+                if pred_label == '0':
+                    self.g.nodes[node_id].set_label('1')
+                elif pred_label == '1':
+                    self.g.nodes[node_id].set_label('0')
+                self.g.remove_edge(pred, node_id)
+
+    def rule_and(self) -> None:
+        """
+        Applies transformation for AND gates: 0 & x -> 0, x & 0 -> 0, 1 & x -> x, x & 1 -> x
+        """
+        node_ids = self.g.get_node_ids()
+        for node_id in node_ids:
+            node = self.g.nodes[node_id]
+            if node.get_label() == '&':
+                inputs = [self.g.nodes[n].get_label() for n in node.get_parents()]
+                if '0' in inputs:
+                    self.g.nodes[node_id].set_label('0')
+                elif '1' in inputs:
+                    inputs.remove('1')
+                    self.g.nodes[node_id].set_label(inputs[0])
+                for pred in node.get_parents():
+                    self.g.remove_edge(pred, node_id)
+
+    def rule_or(self) -> None:
+        """
+        Applies transformation for OR gates: 0 | x -> x, x | 0 -> x, 1 | x -> 1, x | 1 -> 1
+        """
+        node_ids = self.g.get_node_ids()
+        for node_id in node_ids:
+            node = self.g.nodes[node_id]
+            if node.get_label() == '|':
+                inputs = [self.g.nodes[n].get_label() for n in node.get_parents()]
+                if '1' in inputs:
+                    self.g.nodes[node_id].set_label('1')
+                elif '0' in inputs:
+                    inputs.remove('0')
+                    self.g.nodes[node_id].set_label(inputs[0])
+                for pred in node.get_parents():
+                    self.g.remove_edge(pred, node_id)
+
+    def rule_xor(self) -> None:
+        """
+        Applies transformation for XOR gates and neutral elements: 0 ˆ x -> x, x ˆ 0 -> x, 1 ˆ x -> ~x, x ˆ 1 -> ~x
+        """
+        node_ids = self.g.get_node_ids()
+        for node_id in node_ids:
+            node = self.g.nodes[node_id]
+            if node.get_label() == 'ˆ':
+                inputs = [self.g.nodes[n].get_label() for n in node.get_parents()]
+                if '0' in inputs:
+                    inputs.remove('0')
+                    self.g.nodes[node_id].set_label(inputs[0])
+                elif '1' in inputs:
+                    inputs.remove('1')
+                    self.g.nodes[node_id].set_label('∼' + inputs[0])
+                for pred in node.get_parents():
+                    self.g.remove_edge(pred, node_id)
+
+    def evaluate_rule_neutral(self) -> None:
+        """
+        Applies transformation for neutral elements in OR gates: x | ~x -> 1, ~x | x -> 1
+        """
+        node_ids = self.g.get_node_ids()
+        for node_id in node_ids:
+            node = self.g.nodes[node_id]
+            if node.get_label() == '|':
+                inputs = [self.g.nodes[n].get_label() for n in node.get_parents()]
+                if len(inputs) == 2 and '∼' + inputs[0] == inputs[1]:
+                    self.g.nodes[node_id].set_label('1')
+                elif len(inputs) == 2 and '∼' + inputs[1] == inputs[0]:
+                    self.g.nodes[node_id].set_label('1')
+                for pred in node.get_parents():
+                    self.g.remove_edge(pred, node_id)
+
+    def rule_copy(self) -> None:
+        """
+        Applies transformation for copying without output: x -> x, x | x -> x
+        """
+        node_ids = self.g.get_node_ids()
+        for node_id in node_ids:
+            node = self.g.nodes[node_id]
+            if node.indegree() == 1 and node.outdegree() == 0:
+                pred = node.get_parents()[0]
+                self.g.nodes[node_id].set_label(self.g.nodes[pred].get_label())
+                self.g.remove_edge(pred, node_id)
+
+    def evaluate(self):
+        """
+        Applies transformation rules iteratively until there are no more transformations to apply.
+        """
+        # Set to keep track of nodes directly connected to an output
+        output_nodes: Set[int] = set()
+        for node_id in self.g.get_node_ids():
+            if self.g.nodes[node_id].outdegree() == 0:
+                output_nodes.add(node_id)
+
+        # Loop until there are no more transformations to apply
+        transformed = True
+        while transformed:
+            transformed = False  # Flag to check if any transformation was applied in the current iteration
+            # Loop through each node
+            for node_id in list(self.g.get_node_ids()):
+                node = self.g.nodes[node_id]
+
+                # Check if the node is a co-leaf (not directly connected to an output)
+                if node_id not in output_nodes:
+                    # Apply transformation rules
+                    if node.get_label() == '∼':
+                        self.rule_not()
+                        transformed = True
+                    elif node.get_label() == '&':
+                        self.rule_and()
+                        transformed = True
+                    elif node.get_label() == '|':
+                        self.rule_or()
+                        transformed = True
+                    elif node.get_label() == 'ˆ':
+                        self.rule_xor()
+                        transformed = True
+                    elif node.indegree() == 1 and node.outdegree() == 0:
+                        self.rule_copy()
+                        transformed = True
 
 
 def random_int_list(n: int, bound: int, unique=False) -> List[int]:

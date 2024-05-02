@@ -573,7 +573,7 @@ class InitTest(unittest.TestCase):
         # Unknown label
         n0 = Node(0, '&', {}, {})
         n1 = Node(1, '|', {}, {})
-        n2 = Node(2, '1', {}, {})
+        n2 = Node(2, '2', {}, {})
         b = BoolCirc(OpenDigraph([], [], [n0, n1, n2]), True)
         self.assertFalse(b.is_well_formed())
 
@@ -726,6 +726,27 @@ class InitTest(unittest.TestCase):
         self.assertEqual(prev, {1: 0, 2: 0})
 
     '''
+    def test_evaluate_BoolCirc(self):
+        # Create nodes for inputs, outputs, and internal logic
+        b = BoolCirc()
+        n0 = Node(0, '&', {}, {2: 1})
+        n1 = Node(1, '|', {}, {2: 1})
+        n2 = Node(2, '^', {0: 1, 1: 1}, {3: 1})
+        n3 = Node(3, '1', {2: 1}, {4: 1})
+        n4 = Node(4, '0', {2: 1}, {})
+        b.g = OpenDigraph([0, 1], [3, 4], [n0, n1, n2, n3, n4])
+
+        # Call the evaluate method
+        b.evaluate()
+
+        # Test the labels of each node after evaluation
+        nodes = b.g.get_nodes()
+        self.assertEqual(nodes[1].get_label(), '&')  # Node 0: should remain unchanged
+        self.assertEqual(nodes[1].get_label(), '|')  # Node 1: should remain unchanged
+        self.assertEqual(nodes[2].get_label(), '^')  # Node 2: should remain unchanged
+        self.assertEqual(nodes[3].get_label(), '1')  # Node 3: should remain unchanged
+        self.assertEqual(nodes[4].get_label(), '1')  # Node 4: should be transformed to '1'
+
     def test_connected_components_OpenDigraph(self):
         n0 = Node(0, '&', {}, {})
         n1 = Node(1, '&', {}, {})
