@@ -726,6 +726,11 @@ class InitTest(unittest.TestCase):
         self.assertEqual(prev, {1: 0, 2: 0})
 
     '''
+    def test_hamming_BoolCirc(self):
+        code_hamming = BoolCirc()
+        code_hamming.hamming_encoder()
+        code_hamming.hamming_decoder()
+
     def test_evaluate_BoolCirc(self):
         # Create nodes for inputs, outputs, and internal logic
         b = BoolCirc()

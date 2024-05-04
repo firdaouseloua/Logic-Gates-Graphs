@@ -1700,6 +1700,36 @@ class BoolCirc(OpenDigraph):
                 self.g.nodes[node_id].set_label(self.g.nodes[pred].get_label())
                 self.g.remove_edge(pred, node_id)
 
+    def rule_erase(self) -> None:
+        """
+        Applies transformation for erasing a node with a unary operator.
+        """
+        node_ids = self.g.get_node_ids()
+        for node_id in node_ids:
+            node = self.g.nodes[node_id]
+            if node.indegree() == 1 and node.outdegree() == 1:
+                pred = node.get_parents()[0]
+                self.g.add_edge(pred, node.get_parents()[0])
+                self.g.remove_id(node_id)
+
+    def rule_involution(self) -> None:
+        """
+        Applies transformation for involution of XOR gates with more than two inputs.
+        """
+        node_ids = self.g.get_node_ids()
+        for node_id in node_ids:
+            node = self.g.nodes[node_id]
+            if node.get_label() == 'ˆ' and node.indegree() > 2:
+                inputs = [self.g.nodes[n] for n in node.get_parents()]
+                even_inputs = inputs[::2]
+                odd_inputs = inputs[1::2]
+                for i in range(len(even_inputs)):
+                    self.g.add_node('ˆ')
+                    self.g.add_edge(even_inputs[i].get_id(), len(self.g.nodes) - 1)
+                    self.g.add_edge(odd_inputs[i].get_id(), len(self.g.nodes) - 1)
+                    if i == len(even_inputs) - 1 and len(odd_inputs) > len(even_inputs):
+                        self.g.add_edge(odd_inputs[-1].get_id(), len(self.g.nodes) - 1)
+
     def evaluate(self):
         """
         Applies transformation rules iteratively until there are no more transformations to apply.
@@ -1736,6 +1766,25 @@ class BoolCirc(OpenDigraph):
                     elif node.indegree() == 1 and node.outdegree() == 0:
                         self.rule_copy()
                         transformed = True
+                    elif node.indegree() == 1 and node.outdegree() == 1:
+                        self.rule_erase()
+                        transformed = True
+                    elif node.get_label() == 'ˆ' and node.indegree() > 2:
+                        self.rule_involution()
+                        transformed = True
+
+    def hamming_encoder(self):
+        """
+        Constructs the Boolean circuit for the Hamming decoder.
+        """
+        self.parse_parentheses("(x0 & (~x2 ~x4 ~x5) & ((x1 & ~x4) ^ (~x2 & x6)))")
+
+    def hamming_decoder(self):
+        """
+        Constructs the Boolean circuit for the Hamming encoder.
+        """
+        self.parse_parentheses("(x0 & (~x2 ~x4 ~x5) & ((x1 & ~x4) ^ (~x2 & x6))) ^ (x0 ~x1 ~x3)) & "
+                               "((~x2 x4 ~x5) ^ (~x4 ~x5 x6)) & (x0 x1 ~x3))")
 
 
 def random_int_list(n: int, bound: int, unique=False) -> List[int]:
