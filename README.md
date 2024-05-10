@@ -16,10 +16,12 @@
 - docs  
     - .DS_Store
     - CourseNewECR.pdf
+    - Rapport de projet.pdf
     - ReadMe.pdf
     - TD10.pdf
     - TD11.pdf
     - TD12.pdf
+    - Structure.pdf
     - Session3.pdf
     - Session6.pdf
     - session1_ecr.pdf
@@ -50,8 +52,8 @@ Add a 'x' in the brackets when the week is done:
 - [x] Week 6
 - [x] Week 7
 - [x] Week 8
-- [ ] Week 9
-- [ ] Week 10
-- [ ] Week 11
-- [ ] Week 12
+- [x] Week 9
+- [x] Week 10
+- [x] Week 11
+- [x] Week 12
 
