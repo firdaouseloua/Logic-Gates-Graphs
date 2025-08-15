@@ -25,6 +25,39 @@ We also provide step-by-step explanations and diagrams to make the code easily u
 ```
 
 ---
+## Contents
+- worksheet.py    
+- modules  
+    - \__pycache__  
+        - open_digraph.cpython-310.pyc  
+    - open_digraph.py  
+- tests  
+    - example_graph.dot
+    - open_digraph_test.py  
+    - sample_graph.dot
+    - test_graph.dot
+    - test1.py
+- docs  
+    - .DS_Store
+    - CourseNewECR.pdf
+    - Rapport de projet.pdf
+    - ReadMe.pdf
+    - TD10.pdf
+    - TD11.pdf
+    - TD12.pdf
+    - Structure.pdf
+    - Session3.pdf
+    - Session6.pdf
+    - session1_ecr.pdf
+    - session2_ecr.pdf  
+    - session3_ecr.pdf
+    - session4_ecr.pdf
+    - session5_ecr.pdf
+    - session6_ecr.pdf
+    - session7_ecr.pdf
+    - session8_ecr.pdf
+    - session9_ecr.pdf
+--- 
 
 ## Features
 - **Graph-based representation** of logic circuits
