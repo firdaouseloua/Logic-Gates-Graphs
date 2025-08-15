@@ -19,8 +19,6 @@ We also provide step-by-step explanations and diagrams to make the code easily u
 ├── modules/               # Core Python modules
 ├── tests/                 # Unit tests
 ├── worksheet.py           # Main execution file
-├── open_digraph.py        # Graph and logic gates implementation
-├── open_digraph_test.py   # Unit tests for open_digraph
 └── README.md              # Project overview
 ```
 
